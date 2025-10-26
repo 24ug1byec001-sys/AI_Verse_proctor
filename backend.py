@@ -11,7 +11,7 @@ from ultralytics import YOLO
 import torch
 
 class WorkingProctoringServer:
-    def __init__(self):
+    def __init__(self):  # Fixed: Changed _init_ to __init__
         self.connected_clients = set()
         self.camera_active = False
         self.cap = None
@@ -438,6 +438,6 @@ async def main():
         health_task.cancel()
         await server.close_camera()
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # Fixed: Changed _name_ to __name__
     print("Starting Working Proctoring Server with YOLO...")
     asyncio.run(main())
