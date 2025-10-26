@@ -5,51 +5,92 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Secure Exam Proctoring System</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1f2937;
+        }
+        
         body {
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            overflow-x: hidden;
         }
+        
         .glass-card {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
+        
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        
+        .form-input {
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+        }
+        
         .metric-card {
             transition: all 0.3s ease;
         }
+        
         .metric-card:hover {
             transform: translateY(-5px);
         }
+        
         .alert-pulse {
             animation: pulse 2s infinite;
         }
+        
         @keyframes pulse {
             0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
             70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
-        .login-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-        }
-        .form-input {
-            transition: all 0.3s ease;
-        }
-        .form-input:focus {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
+        
         .fade-in {
             animation: fadeIn 0.5s ease-in;
         }
+        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+        
         .connection-dot {
             display: inline-block;
             width: 8px;
@@ -57,82 +98,103 @@
             border-radius: 50%;
             margin-right: 8px;
         }
-        .connected { background-color: #10B981; }
-        .connecting { background-color: #F59E0B; }
-        .disconnected { background-color: #EF4444; }
+        
+        .connected { background-color: var(--success); }
+        .connecting { background-color: var(--warning); }
+        .disconnected { background-color: var(--danger); }
+        
         .status-badge {
             padding: 4px 8px;
             border-radius: 12px;
             font-size: 0.75rem;
             font-weight: 600;
         }
-        .status-real { background: rgba(34, 197, 94, 0.2); color: #10B981; border: 1px solid #10B981; }
-        .status-simulated { background: rgba(245, 158, 11, 0.2); color: #F59E0B; border: 1px solid #F59E0B; }
-        .distraction-indicator {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(239, 68, 68, 0.9);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-weight: 600;
-            z-index: 10;
-            animation: distractionPulse 1.5s infinite;
+        
+        .status-real { background: rgba(34, 197, 94, 0.2); color: var(--success); border: 1px solid var(--success); }
+        .status-simulated { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid var(--warning); }
+        
+        .progress-bar {
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+            background-color: rgba(255, 255, 255, 0.2);
         }
-        @keyframes distractionPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+        
+        .progress-fill {
+            height: 100%;
+            transition: width 0.3s ease;
         }
-        .camera-status-indicator {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
+        
+        .floating-alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        .camera-preview {
+            border-radius: 12px;
+            overflow: hidden;
             background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            z-index: 10;
         }
-        .detection-overlay {
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        
+        .step {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.3);
+            margin: 0 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .step.active {
+            background-color: white;
+            transform: scale(1.2);
+        }
+        
+        .step.completed {
+            background-color: var(--success);
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 0;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+        }
+        
+        .video-feed {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none;
-            z-index: 5;
+            object-fit: cover;
+            border-radius: 12px;
         }
-        .face-box {
-            position: absolute;
-            border: 2px solid #10B981;
-            border-radius: 8px;
-            background: rgba(16, 185, 129, 0.1);
-        }
-        .eye-dot {
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #F59E0B;
-        }
-        .gaze-line {
-            position: absolute;
-            height: 2px;
-            background: #F59E0B;
-            transform-origin: 0 0;
-        }
-        .capture-canvas {
-            display: none;
+        
+        .camera-permission {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
         }
     </style>
 </head>
 <body class="min-h-screen">
     <!-- Login Page -->
-    <div id="login-page" class="min-h-screen flex items-center justify-center p-6 fade-in">
-        <div class="login-container rounded-3xl shadow-2xl p-8 w-full max-w-md">
+    <div id="login-page" class="min-h-screen flex items-center justify-center p-4 fade-in">
+        <div class="login-container rounded-3xl p-8 w-full max-w-md">
             <!-- Header -->
             <div class="text-center mb-8">
                 <div class="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -152,7 +214,7 @@
                         type="email" 
                         id="email" 
                         required
-                        class="form-input w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                        class="form-input w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="student@university.edu"
                     >
                 </div>
@@ -165,7 +227,7 @@
                         type="password" 
                         id="password" 
                         required
-                        class="form-input w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                        class="form-input w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Enter your password"
                     >
                 </div>
@@ -184,7 +246,7 @@
 
                 <button 
                     type="submit"
-                    class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
+                    class="btn-primary w-full text-white py-3 px-4 rounded-xl font-semibold shadow-lg"
                 >
                     <i class="fas fa-sign-in-alt mr-2"></i>Sign In to Exam
                 </button>
@@ -203,16 +265,44 @@
                 </div>
             </div>
 
-            <!-- Camera Access Instructions -->
+            <!-- Server Status -->
+            <div class="mt-6 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+                <h3 class="font-semibold text-yellow-800 mb-2 flex items-center">
+                    <i class="fas fa-server mr-2"></i>Server Status
+                </h3>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-yellow-700">WebSocket Connection:</span>
+                    <span id="server-status" class="text-sm font-semibold text-yellow-600">Not Connected</span>
+                </div>
+                <button id="test-connection-btn" class="w-full mt-3 bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded-lg text-sm transition-colors">
+                    <i class="fas fa-plug mr-2"></i>Test Server Connection
+                </button>
+            </div>
+
+            <!-- Camera Status -->
             <div class="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
                 <h3 class="font-semibold text-blue-800 mb-2 flex items-center">
-                    <i class="fas fa-camera mr-2"></i>Camera Access Required
+                    <i class="fas fa-camera mr-2"></i>Camera Status
                 </h3>
-                <p class="text-sm text-blue-700 mb-3">This system requires camera access for real-time proctoring.</p>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-blue-700">Camera Access:</span>
+                    <span id="camera-status-login" class="text-sm font-semibold text-blue-600">Checking...</span>
+                </div>
+                <button id="test-camera-btn" class="w-full mt-3 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg text-sm transition-colors">
+                    <i class="fas fa-camera mr-2"></i>Test Camera Access
+                </button>
+            </div>
+
+            <!-- Exam Information -->
+            <div class="mt-8 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                <h3 class="font-semibold text-blue-800 mb-2 flex items-center">
+                    <i class="fas fa-info-circle mr-2"></i>Exam Requirements
+                </h3>
                 <ul class="text-sm text-blue-700 space-y-1">
-                    <li>• Click "Allow" when prompted for camera access</li>
-                    <li>• Ensure good lighting on your face</li>
-                    <li>• Position yourself in the center of the frame</li>
+                    <li>• Stable internet connection required</li>
+                    <li>• Webcam and microphone access</li>
+                    <li>• No external devices allowed</li>
+                    <li>• Well-lit environment</li>
                 </ul>
             </div>
 
@@ -228,21 +318,196 @@
         </div>
     </div>
 
-    <!-- Main Dashboard (Hidden Initially) -->
-    <div id="dashboard" class="min-h-screen hidden p-6">
+    <!-- Setup Wizard -->
+    <div id="setup-wizard" class="min-h-screen hidden items-center justify-center p-4 bg-gradient-to-br from-blue-600 to-purple-700">
+        <div class="login-container rounded-3xl p-8 w-full max-w-2xl">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-camera text-blue-600 text-2xl"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Setup Your Exam Environment</h1>
+                <p class="text-gray-600">We need to verify your environment before starting the exam</p>
+            </div>
+            
+            <!-- Step Indicator -->
+            <div class="step-indicator">
+                <div class="step active" id="step-1-indicator"></div>
+                <div class="step" id="step-2-indicator"></div>
+                <div class="step" id="step-3-indicator"></div>
+                <div class="step" id="step-4-indicator"></div>
+            </div>
+            
+            <!-- Step 1: Welcome -->
+            <div id="step-1" class="step-content fade-in">
+                <div class="text-center py-8">
+                    <i class="fas fa-user-check text-5xl text-blue-500 mb-4"></i>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Welcome, <span id="setup-user-name">Student</span>!</h2>
+                    <p class="text-gray-600 mb-6">Before we begin your exam, we need to verify your identity and environment.</p>
+                    <p class="text-gray-600 mb-8">This process will take about 2 minutes and includes:</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                        <div class="bg-blue-50 p-4 rounded-xl">
+                            <i class="fas fa-camera text-blue-500 text-xl mb-2"></i>
+                            <h3 class="font-semibold text-gray-800">Camera Check</h3>
+                            <p class="text-sm text-gray-600">Verify your camera is working</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-xl">
+                            <i class="fas fa-microphone text-green-500 text-xl mb-2"></i>
+                            <h3 class="font-semibold text-gray-800">Microphone Check</h3>
+                            <p class="text-sm text-gray-600">Test your audio input</p>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-xl">
+                            <i class="fas fa-network-wired text-purple-500 text-xl mb-2"></i>
+                            <h3 class="font-semibold text-gray-800">Connection Test</h3>
+                            <p class="text-sm text-gray-600">Ensure stable connection</p>
+                        </div>
+                        <div class="bg-yellow-50 p-4 rounded-xl">
+                            <i class="fas fa-id-card text-yellow-500 text-xl mb-2"></i>
+                            <h3 class="font-semibold text-gray-800">ID Verification</h3>
+                            <p class="text-sm text-gray-600">Confirm your identity</p>
+                        </div>
+                    </div>
+                    
+                    <button id="start-setup-btn" class="btn-primary text-white py-3 px-8 rounded-xl font-semibold shadow-lg">
+                        Start Setup <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Step 2: Camera Access -->
+            <div id="step-2" class="step-content hidden">
+                <div class="text-center py-4">
+                    <i class="fas fa-camera text-5xl text-blue-500 mb-4"></i>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Camera Access</h2>
+                    <p class="text-gray-600 mb-6">We need access to your camera for identity verification and proctoring.</p>
+                    
+                    <div class="camera-preview mx-auto max-w-md h-64 mb-6 flex items-center justify-center">
+                        <div id="camera-placeholder" class="text-center text-gray-500">
+                            <i class="fas fa-camera fa-3x mb-3"></i>
+                            <p>Camera preview will appear here</p>
+                        </div>
+                        <video id="camera-preview" class="w-full h-full object-cover hidden"></video>
+                    </div>
+                    
+                    <div class="flex justify-center space-x-4">
+                        <button id="request-camera-btn" class="btn-primary text-white py-3 px-6 rounded-xl font-semibold">
+                            <i class="fas fa-camera mr-2"></i>Allow Camera Access
+                        </button>
+                        <button id="skip-camera-btn" class="bg-gray-500 hover:bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold transition-colors">
+                            Skip for Now
+                        </button>
+                    </div>
+                    
+                    <p class="text-sm text-gray-500 mt-4">Note: Camera access is required for proctored exams</p>
+                </div>
+            </div>
+            
+            <!-- Step 3: Environment Check -->
+            <div id="step-3" class="step-content hidden">
+                <div class="text-center py-4">
+                    <i class="fas fa-lightbulb text-5xl text-yellow-500 mb-4"></i>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Environment Check</h2>
+                    <p class="text-gray-600 mb-6">Please ensure your environment meets these requirements:</p>
+                    
+                    <div class="grid grid-cols-1 gap-4 mb-8 max-w-md mx-auto">
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 flex items-start">
+                            <i class="fas fa-sun text-yellow-500 text-xl mt-1 mr-4"></i>
+                            <div class="text-left">
+                                <h3 class="font-semibold text-gray-800">Good Lighting</h3>
+                                <p class="text-sm text-gray-600">Your face should be clearly visible</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 flex items-start">
+                            <i class="fas fa-user-friends text-blue-500 text-xl mt-1 mr-4"></i>
+                            <div class="text-left">
+                                <h3 class="font-semibold text-gray-800">Alone in Room</h3>
+                                <p class="text-sm text-gray-600">No other people should be present</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 flex items-start">
+                            <i class="fas fa-ban text-red-500 text-xl mt-1 mr-4"></i>
+                            <div class="text-left">
+                                <h3 class="font-semibold text-gray-800">No External Devices</h3>
+                                <p class="text-sm text-gray-600">Phones, tablets, or other devices not allowed</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 flex items-start">
+                            <i class="fas fa-desktop text-green-500 text-xl mt-1 mr-4"></i>
+                            <div class="text-left">
+                                <h3 class="font-semibold text-gray-800">Clear Workspace</h3>
+                                <p class="text-sm text-gray-600">Only exam materials on your desk</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-center mb-6">
+                        <input type="checkbox" id="environment-confirm" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500">
+                        <label for="environment-confirm" class="ml-2 text-gray-700 font-medium">I confirm my environment meets these requirements</label>
+                    </div>
+                    
+                    <button id="environment-next-btn" class="btn-primary text-white py-3 px-8 rounded-xl font-semibold shadow-lg" disabled>
+                        Continue <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Step 4: Final Verification -->
+            <div id="step-4" class="step-content hidden">
+                <div class="text-center py-8">
+                    <i class="fas fa-check-circle text-5xl text-green-500 mb-4"></i>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Ready to Begin!</h2>
+                    <p class="text-gray-600 mb-6">Your exam environment has been verified successfully.</p>
+                    
+                    <div class="bg-green-50 border border-green-200 rounded-xl p-6 max-w-md mx-auto mb-8">
+                        <h3 class="font-semibold text-green-800 mb-4">Exam Details</h3>
+                        <div class="text-left space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Exam:</span>
+                                <span class="font-semibold" id="setup-exam-name">Computer Science Final</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Duration:</span>
+                                <span class="font-semibold" id="setup-exam-duration">02:00:00</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Questions:</span>
+                                <span class="font-semibold" id="setup-exam-questions">50</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Proctoring:</span>
+                                <span class="font-semibold text-green-600">ACTIVE</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-sm text-gray-500 mb-8">
+                        <p>Once you begin, the exam timer will start and cannot be paused.</p>
+                        <p>Any suspicious activity will be flagged for review.</p>
+                    </div>
+                    
+                    <button id="start-exam-btn" class="btn-primary text-white py-3 px-8 rounded-xl font-semibold shadow-lg text-lg">
+                        <i class="fas fa-play-circle mr-2"></i>Start Exam
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard" class="min-h-screen hidden p-4">
         <div class="max-w-7xl mx-auto">
             <!-- Header -->
             <div class="glass-card rounded-2xl p-6 mb-6">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h1 class="text-3xl font-bold text-white">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                    <div class="mb-4 md:mb-0">
+                        <h1 class="text-2xl md:text-3xl font-bold text-white">
                             <i class="fas fa-graduation-cap mr-3"></i>
                             AI Exam Proctoring System
                         </h1>
                         <p class="text-gray-200 mt-2">Welcome, <span id="user-name" class="font-semibold">Student</span> | <span id="exam-name" class="font-semibold">Computer Science Final</span></p>
                     </div>
                     <div class="text-right">
-                        <div id="connection-status" class="text-green-300 font-semibold">
+                        <div id="connection-status" class="text-green-300 font-semibold flex items-center justify-end">
                             <span class="connection-dot connected"></span>
                             System Connected
                         </div>
@@ -265,51 +530,31 @@
                         <h2 class="text-xl font-semibold text-white mb-4">
                             <i class="fas fa-video mr-2"></i>Live Proctoring Feed
                         </h2>
-                        <div class="bg-black rounded-xl overflow-hidden aspect-video flex items-center justify-center relative">
-                            <!-- Real Camera Feed -->
-                            <video id="live-camera-feed" autoplay playsinline class="w-full h-full object-cover hidden"></video>
-                            
-                            <!-- Fallback Image Feed -->
-                            <img id="video-feed" src="" alt="Live Feed" class="w-full h-full object-cover hidden">
-                            
-                            <div id="video-placeholder" class="text-gray-400 text-center">
+                        <div class="video-container">
+                            <video id="webcam-video" autoplay playsinline class="video-feed hidden"></video>
+                            <canvas id="webcam-canvas" class="video-feed hidden"></canvas>
+                            <div id="video-placeholder" class="video-feed camera-permission text-white text-center">
                                 <i class="fas fa-camera fa-3x mb-3"></i>
-                                <p>Starting camera feed...</p>
+                                <p class="text-lg font-semibold mb-2">Camera Access Required</p>
+                                <p class="text-sm mb-4">Please allow camera access to begin proctoring</p>
+                                <button id="enable-camera-btn" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg">
+                                    <i class="fas fa-camera mr-2"></i>Enable Camera
+                                </button>
                             </div>
                             <div class="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center">
                                 <i class="fas fa-circle mr-2 animate-pulse"></i>
                                 LIVE
                             </div>
-                            
-                            <!-- Distraction Indicator -->
-                            <div id="distraction-indicator" class="distraction-indicator hidden">
-                                <i class="fas fa-exclamation-triangle mr-2"></i>
-                                <span>DISTRACTED</span>
-                            </div>
-                            
-                            <!-- Camera Status Indicator -->
-                            <div id="camera-status-indicator" class="camera-status-indicator">
-                                <i class="fas fa-camera mr-1"></i>
-                                <span id="camera-status-text">Initializing Camera...</span>
-                            </div>
-                            
-                            <!-- Detection Overlay -->
-                            <div id="detection-overlay" class="detection-overlay"></div>
                         </div>
                         
-                        <!-- Camera Controls -->
-                        <div class="mt-4 flex justify-between items-center">
-                            <div class="flex space-x-2">
-                                <button id="toggle-camera-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
-                                    <i class="fas fa-camera mr-2"></i>Switch Camera
-                                </button>
-                                <button id="capture-frame-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
-                                    <i class="fas fa-camera-retro mr-2"></i>Capture Frame
-                                </button>
+                        <!-- Connection Info -->
+                        <div class="mt-4 flex justify-between items-center text-sm">
+                            <div class="text-gray-300">
+                                <span id="data-status">Waiting for data...</span>
                             </div>
-                            <div class="text-gray-300 text-sm">
+                            <div class="text-gray-300">
                                 FPS: <span id="fps-display">0</span> | 
-                                Detection: <span id="detection-status">Initializing...</span>
+                                Camera: <span id="camera-status-dashboard">Checking...</span>
                             </div>
                         </div>
                     </div>
@@ -317,30 +562,22 @@
                     <!-- System Status -->
                     <div class="glass-card rounded-2xl p-4">
                         <h3 class="text-lg font-semibold text-white mb-2">System Status</h3>
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                        <div class="grid grid-cols-2 gap-4 text-sm">
                             <div class="flex items-center">
-                                <span class="text-gray-300 mr-2">Camera:</span>
-                                <span id="camera-status" class="font-semibold text-yellow-400">Checking...</span>
+                                <span class="text-gray-300 mr-2">Detection:</span>
+                                <span id="detection-status" class="font-semibold text-yellow-400">Initializing...</span>
                             </div>
                             <div class="flex items-center">
-                                <span class="text-gray-300 mr-2">Feed Type:</span>
-                                <span id="feed-type" class="font-semibold text-blue-400">Live Camera</span>
+                                <span class="text-gray-300 mr-2">Faces Found:</span>
+                                <span id="faces-count" class="font-semibold text-blue-400">0</span>
                             </div>
                             <div class="flex items-center">
                                 <span class="text-gray-300 mr-2">Frame Rate:</span>
                                 <span id="fps-display-main" class="font-semibold text-green-400">0 FPS</span>
                             </div>
                             <div class="flex items-center">
-                                <span class="text-gray-300 mr-2">Resolution:</span>
-                                <span id="resolution-display" class="font-semibold text-purple-400">--</span>
-                            </div>
-                            <div class="flex items-center">
-                                <span class="text-gray-300 mr-2">Face Detection:</span>
-                                <span id="face-detection-status" class="font-semibold text-yellow-400">Waiting...</span>
-                            </div>
-                            <div class="flex items-center">
-                                <span class="text-gray-300 mr-2">Focus Level:</span>
-                                <span id="focus-level" class="font-semibold text-green-400">Good</span>
+                                <span class="text-gray-300 mr-2">Stability:</span>
+                                <span id="stable-frames" class="font-semibold text-purple-400">0 frames</span>
                             </div>
                         </div>
                     </div>
@@ -387,10 +624,10 @@
                                     </span>
                                     <span id="head-yaw-value" class="text-2xl font-bold text-green-400">0.0°</span>
                                 </div>
-                                <div class="w-full bg-gray-700 rounded-full h-2 mb-1">
-                                    <div id="head-yaw-bar" class="bg-green-400 h-2 rounded-full transition-all duration-300" style="width: 50%"></div>
+                                <div class="progress-bar">
+                                    <div id="head-yaw-bar" class="progress-fill bg-green-400" style="width: 50%"></div>
                                 </div>
-                                <div class="text-xs text-gray-400 flex justify-between">
+                                <div class="text-xs text-gray-400 flex justify-between mt-1">
                                     <span>Centered</span>
                                     <span>Looking Away</span>
                                 </div>
@@ -404,10 +641,10 @@
                                     </span>
                                     <span id="gaze-deviation-value" class="text-2xl font-bold text-green-400">0.000</span>
                                 </div>
-                                <div class="w-full bg-gray-700 rounded-full h-2 mb-1">
-                                    <div id="gaze-deviation-bar" class="bg-green-400 h-2 rounded-full transition-all duration-300" style="width: 50%"></div>
+                                <div class="progress-bar">
+                                    <div id="gaze-deviation-bar" class="progress-fill bg-green-400" style="width: 50%"></div>
                                 </div>
-                                <div class="text-xs text-gray-400 flex justify-between">
+                                <div class="text-xs text-gray-400 flex justify-between mt-1">
                                     <span>Focused</span>
                                     <span>Distracted</span>
                                 </div>
@@ -423,23 +660,6 @@
                                 </div>
                                 <div class="mt-2 text-xs text-gray-400">
                                     No unauthorized devices detected
-                                </div>
-                            </div>
-
-                            <!-- Focus Score -->
-                            <div class="metric-card bg-white/10 rounded-xl p-4">
-                                <div class="flex justify-between items-center mb-2">
-                                    <span class="text-gray-200 font-medium">
-                                        <i class="fas fa-brain mr-2"></i>Focus Score
-                                    </span>
-                                    <span id="focus-score-value" class="text-2xl font-bold text-green-400">92%</span>
-                                </div>
-                                <div class="w-full bg-gray-700 rounded-full h-2 mb-1">
-                                    <div id="focus-score-bar" class="bg-green-400 h-2 rounded-full transition-all duration-300" style="width: 92%"></div>
-                                </div>
-                                <div class="text-xs text-gray-400 flex justify-between">
-                                    <span>Distracted</span>
-                                    <span>Focused</span>
                                 </div>
                             </div>
                         </div>
@@ -495,35 +715,38 @@
         </div>
     </div>
 
-    <!-- Hidden Canvas for Frame Processing -->
-    <canvas id="capture-canvas" class="capture-canvas"></canvas>
+    <!-- Floating Alert Container -->
+    <div id="floating-alerts"></div>
 
     <script>
         class ProctoringDashboard {
             constructor() {
+                // WebSocket configuration
+                this.ws = null;
+                this.isConnected = false;
+                this.reconnectAttempts = 0;
+                this.maxReconnectAttempts = 10;
+                this.reconnectTimeout = null;
+
                 // Camera configuration
-                this.cameraStream = null;
-                this.cameraDevices = [];
-                this.currentCameraIndex = 0;
+                this.stream = null;
+                this.videoElement = null;
+                this.canvasElement = null;
+                this.ctx = null;
                 this.isCameraActive = false;
-                
+                this.cameraCheckInterval = null;
+
                 // Performance monitoring
                 this.lastFrameTime = null;
                 this.frameCount = 0;
-                this.currentFPS = 0;
-                
-                // Detection state
-                this.faceDetected = false;
-                this.faceDetectionCount = 0;
-                this.distractionStartTime = null;
-                this.focusScore = 92;
-                this.detectionConfidence = 0;
-                
+                this.currentLatency = 0;
+
                 // Session management
                 this.sessionStart = Date.now();
                 this.activityLog = [];
                 this.alertHistory = [];
                 this.userData = null;
+                this.currentStep = 1;
 
                 // Simulated user database
                 this.users = {
@@ -566,6 +789,10 @@
                 this.initializeEventListeners();
                 this.updateCurrentTime();
                 setInterval(() => this.updateCurrentTime(), 1000);
+                
+                // Test server connection on startup
+                this.testServerConnection();
+                this.checkCameraAccess();
             }
 
             initializeEventListeners() {
@@ -590,13 +817,44 @@
                     });
                 });
 
-                // Camera controls
-                document.getElementById('toggle-camera-btn').addEventListener('click', () => {
-                    this.switchCamera();
+                // Test connection button
+                document.getElementById('test-connection-btn').addEventListener('click', () => {
+                    this.testServerConnection();
                 });
 
-                document.getElementById('capture-frame-btn').addEventListener('click', () => {
-                    this.captureFrame();
+                // Test camera button
+                document.getElementById('test-camera-btn').addEventListener('click', () => {
+                    this.checkCameraAccess(true);
+                });
+
+                // Setup wizard buttons
+                document.getElementById('start-setup-btn').addEventListener('click', () => {
+                    this.nextStep();
+                });
+                
+                document.getElementById('request-camera-btn').addEventListener('click', () => {
+                    this.requestCameraAccess();
+                });
+                
+                document.getElementById('skip-camera-btn').addEventListener('click', () => {
+                    this.nextStep();
+                });
+                
+                document.getElementById('environment-confirm').addEventListener('change', (e) => {
+                    document.getElementById('environment-next-btn').disabled = !e.target.checked;
+                });
+                
+                document.getElementById('environment-next-btn').addEventListener('click', () => {
+                    this.nextStep();
+                });
+                
+                document.getElementById('start-exam-btn').addEventListener('click', () => {
+                    this.startExam();
+                });
+
+                // Enable camera button
+                document.getElementById('enable-camera-btn').addEventListener('click', () => {
+                    this.startCamera();
                 });
 
                 // Check for remembered email
@@ -604,6 +862,255 @@
                 if (rememberedEmail) {
                     document.getElementById('email').value = rememberedEmail;
                     document.getElementById('remember-me').checked = true;
+                }
+            }
+
+            async checkCameraAccess(showAlert = false) {
+                const statusElement = document.getElementById('camera-status-login');
+                
+                try {
+                    // Check if browser supports mediaDevices API
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                        statusElement.textContent = 'Not Supported';
+                        statusElement.className = 'text-sm font-semibold text-red-600';
+                        if (showAlert) {
+                            this.showFloatingAlert('Camera API not supported in this browser', 'error');
+                        }
+                        return false;
+                    }
+
+                    // Try to access camera
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 },
+                            frameRate: { ideal: 30 }
+                        } 
+                    });
+                    
+                    // Stop the stream immediately after testing
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    statusElement.textContent = 'Available ✅';
+                    statusElement.className = 'text-sm font-semibold text-green-600';
+                    
+                    if (showAlert) {
+                        this.showFloatingAlert('Camera access confirmed!', 'success');
+                    }
+                    
+                    return true;
+                } catch (error) {
+                    console.error('Camera access error:', error);
+                    
+                    let errorMessage = 'Camera access denied';
+                    if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+                        errorMessage = 'No camera found';
+                    } else if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                        errorMessage = 'Camera permission denied';
+                    } else if (error.name === 'NotSupportedError') {
+                        errorMessage = 'Camera not supported';
+                    } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                        errorMessage = 'Camera in use by another application';
+                    }
+                    
+                    statusElement.textContent = errorMessage;
+                    statusElement.className = 'text-sm font-semibold text-red-600';
+                    
+                    if (showAlert) {
+                        this.showFloatingAlert(errorMessage, 'error');
+                    }
+                    
+                    return false;
+                }
+            }
+
+            async startCamera() {
+                try {
+                    this.videoElement = document.getElementById('webcam-video');
+                    this.canvasElement = document.getElementById('webcam-canvas');
+                    this.ctx = this.canvasElement.getContext('2d');
+                    
+                    // Get camera stream
+                    this.stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 },
+                            frameRate: { ideal: 30 }
+                        } 
+                    });
+                    
+                    // Set video source
+                    this.videoElement.srcObject = this.stream;
+                    
+                    // Wait for video to load
+                    await new Promise((resolve) => {
+                        this.videoElement.onloadedmetadata = () => {
+                            resolve();
+                        };
+                    });
+                    
+                    // Set canvas dimensions to match video
+                    this.canvasElement.width = this.videoElement.videoWidth;
+                    this.canvasElement.height = this.videoElement.videoHeight;
+                    
+                    // Show video and canvas, hide placeholder
+                    this.videoElement.classList.remove('hidden');
+                    this.canvasElement.classList.remove('hidden');
+                    document.getElementById('video-placeholder').classList.add('hidden');
+                    
+                    this.isCameraActive = true;
+                    this.updateCameraStatus(true);
+                    
+                    // Start processing frames
+                    this.processVideoFrame();
+                    
+                    // Monitor camera status
+                    this.startCameraMonitoring();
+                    
+                    this.addActivityLog('Camera activated successfully', 'system', 'green');
+                    
+                } catch (error) {
+                    console.error('Error starting camera:', error);
+                    this.updateCameraStatus(false);
+                    this.addActivityLog('Failed to activate camera: ' + error.message, 'error', 'red');
+                    
+                    // Show error in placeholder
+                    const placeholder = document.getElementById('video-placeholder');
+                    placeholder.innerHTML = `
+                        <div class="text-center">
+                            <i class="fas fa-exclamation-triangle fa-3x mb-3 text-red-400"></i>
+                            <p class="text-lg font-semibold mb-2 text-red-400">Camera Error</p>
+                            <p class="text-sm mb-4">${error.message}</p>
+                            <button id="retry-camera-btn" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg">
+                                <i class="fas fa-redo mr-2"></i>Retry Camera
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Add event listener for retry button
+                    document.getElementById('retry-camera-btn').addEventListener('click', () => {
+                        this.startCamera();
+                    });
+                }
+            }
+
+            startCameraMonitoring() {
+                // Clear existing interval
+                if (this.cameraCheckInterval) {
+                    clearInterval(this.cameraCheckInterval);
+                }
+                
+                // Check camera status every 5 seconds
+                this.cameraCheckInterval = setInterval(() => {
+                    if (this.stream) {
+                        const videoTrack = this.stream.getVideoTracks()[0];
+                        if (!videoTrack || videoTrack.readyState === 'ended') {
+                            this.updateCameraStatus(false);
+                            this.addActivityLog('Camera disconnected', 'warning', 'yellow');
+                            this.stopCamera();
+                        }
+                    }
+                }, 5000);
+            }
+
+            stopCamera() {
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.stop());
+                    this.stream = null;
+                }
+                
+                if (this.cameraCheckInterval) {
+                    clearInterval(this.cameraCheckInterval);
+                    this.cameraCheckInterval = null;
+                }
+                
+                this.isCameraActive = false;
+                this.updateCameraStatus(false);
+                
+                // Show placeholder
+                document.getElementById('video-placeholder').classList.remove('hidden');
+                if (this.videoElement) this.videoElement.classList.add('hidden');
+                if (this.canvasElement) this.canvasElement.classList.add('hidden');
+            }
+
+            updateCameraStatus(active) {
+                const statusElement = document.getElementById('camera-status-dashboard');
+                if (!statusElement) return;
+                
+                if (active) {
+                    statusElement.textContent = 'Active ✅';
+                    statusElement.className = 'text-green-400';
+                } else {
+                    statusElement.textContent = 'Inactive ❌';
+                    statusElement.className = 'text-red-400';
+                }
+            }
+
+            processVideoFrame() {
+                if (!this.isCameraActive || !this.videoElement || !this.ctx) return;
+                
+                try {
+                    // Draw current video frame to canvas
+                    this.ctx.drawImage(
+                        this.videoElement, 
+                        0, 0, 
+                        this.canvasElement.width, 
+                        this.canvasElement.height
+                    );
+                    
+                    // Process next frame
+                    requestAnimationFrame(() => this.processVideoFrame());
+                    
+                    // Update performance metrics
+                    this.updatePerformanceMetrics();
+                    
+                } catch (error) {
+                    console.error('Error processing video frame:', error);
+                }
+            }
+
+            async testServerConnection() {
+                const statusElement = document.getElementById('server-status');
+                const testBtn = document.getElementById('test-connection-btn');
+                
+                statusElement.textContent = 'Testing...';
+                statusElement.className = 'text-sm font-semibold text-yellow-600';
+                testBtn.disabled = true;
+                testBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Testing...';
+
+                try {
+                    // Try to connect to WebSocket
+                    const ws = new WebSocket('ws://localhost:8765');
+                    
+                    await new Promise((resolve, reject) => {
+                        const timeout = setTimeout(() => {
+                            ws.close();
+                            reject(new Error('Connection timeout'));
+                        }, 3000);
+
+                        ws.onopen = () => {
+                            clearTimeout(timeout);
+                            ws.close();
+                            resolve();
+                        };
+
+                        ws.onerror = () => {
+                            clearTimeout(timeout);
+                            reject(new Error('Connection failed'));
+                        };
+                    });
+
+                    statusElement.textContent = 'Connected ✅';
+                    statusElement.className = 'text-sm font-semibold text-green-600';
+                    this.showFloatingAlert('Server connection successful!', 'success');
+                    
+                } catch (error) {
+                    statusElement.textContent = 'Not Connected ❌';
+                    statusElement.className = 'text-sm font-semibold text-red-600';
+                    this.showFloatingAlert('Cannot connect to server. Make sure the server is running on port 8765.', 'error');
+                } finally {
+                    testBtn.disabled = false;
+                    testBtn.innerHTML = '<i class="fas fa-plug mr-2"></i>Test Server Connection';
                 }
             }
 
@@ -632,10 +1139,10 @@
                             localStorage.removeItem('rememberedEmail');
                         }
                         
-                        this.showDashboard();
-                        this.showSuccessMessage(authResult.message);
+                        this.showSetupWizard();
+                        this.showFloatingAlert(authResult.message, 'success');
                     } else {
-                        this.showErrorMessage(authResult.message);
+                        this.showFloatingAlert(authResult.message, 'error');
                     }
                     
                     submitBtn.innerHTML = originalText;
@@ -682,7 +1189,7 @@
                 return {
                     success: true,
                     userData: userData,
-                    message: `Welcome back, ${user.name}!`
+                    message: 'Welcome back, ' + user.name + '!'
                 };
             }
 
@@ -694,33 +1201,136 @@
                 if (confirm('Are you sure you want to logout? This will end your exam session.')) {
                     this.addActivityLog('User logged out', 'system', 'blue');
                     this.hideDashboard();
+                    this.disconnectWebSocket();
                     this.stopCamera();
                     document.getElementById('login-form').reset();
-                    this.showSuccessMessage('You have been logged out successfully.');
+                    this.showFloatingAlert('You have been logged out successfully.', 'success');
                 }
             }
 
-            showDashboard() {
+            showSetupWizard() {
                 document.getElementById('login-page').classList.add('hidden');
+                document.getElementById('setup-wizard').classList.remove('hidden');
+                
+                // Update user info in setup
+                document.getElementById('setup-user-name').textContent = this.userData.name;
+                document.getElementById('setup-exam-name').textContent = this.userData.currentExam;
+                document.getElementById('setup-exam-duration').textContent = this.userData.examData.duration;
+                document.getElementById('setup-exam-questions').textContent = this.userData.examData.questions;
+                
+                this.currentStep = 1;
+                this.updateStepIndicator();
+            }
+
+            nextStep() {
+                this.currentStep++;
+                this.updateStepIndicator();
+                
+                // Show the current step and hide others
+                document.querySelectorAll('.step-content').forEach((el, index) => {
+                    if (index + 1 === this.currentStep) {
+                        el.classList.remove('hidden');
+                        el.classList.add('fade-in');
+                    } else {
+                        el.classList.add('hidden');
+                        el.classList.remove('fade-in');
+                    }
+                });
+            }
+
+            updateStepIndicator() {
+                document.querySelectorAll('.step').forEach((el, index) => {
+                    if (index + 1 < this.currentStep) {
+                        el.classList.add('completed');
+                        el.classList.remove('active');
+                    } else if (index + 1 === this.currentStep) {
+                        el.classList.add('active');
+                        el.classList.remove('completed');
+                    } else {
+                        el.classList.remove('active', 'completed');
+                    }
+                });
+            }
+
+            async requestCameraAccess() {
+                const cameraPreview = document.getElementById('camera-preview');
+                const cameraPlaceholder = document.getElementById('camera-placeholder');
+                const requestBtn = document.getElementById('request-camera-btn');
+                
+                requestBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Requesting...';
+                requestBtn.disabled = true;
+                
+                try {
+                    // Request camera access
+                    const cameraStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 },
+                            facingMode: 'user'
+                        } 
+                    });
+                    
+                    // Display camera feed
+                    cameraPreview.srcObject = cameraStream;
+                    cameraPreview.classList.remove('hidden');
+                    cameraPlaceholder.classList.add('hidden');
+                    
+                    requestBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Camera Active';
+                    requestBtn.classList.remove('btn-primary');
+                    requestBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+                    
+                    // Store the stream for later use
+                    this.cameraStream = cameraStream;
+                    
+                    // Enable next step after a short delay
+                    setTimeout(() => {
+                        this.nextStep();
+                    }, 2000);
+                    
+                } catch (error) {
+                    console.error('Error accessing camera:', error);
+                    cameraPlaceholder.innerHTML = `
+                        <div class="text-center text-red-400">
+                            <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                            <p>Camera access denied</p>
+                            <p class="text-sm mt-2">Please allow camera access to continue</p>
+                        </div>
+                    `;
+                    
+                    requestBtn.innerHTML = '<i class="fas fa-camera mr-2"></i>Try Again';
+                    requestBtn.disabled = false;
+                    
+                    this.showFloatingAlert('Camera access is required for proctored exams.', 'error');
+                }
+            }
+
+            startExam() {
+                this.showDashboard();
+                this.initializeWebSocket();
+                
+                // Log exam start
+                this.addActivityLog('Exam "' + this.userData.currentExam + '" started', 'system', 'blue');
+                this.showFloatingAlert('Exam started successfully. Good luck!', 'success');
+            }
+
+            showDashboard() {
+                document.getElementById('setup-wizard').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
                 
                 // Update user info
                 this.updateUserInterface();
-
                 this.startSessionTimer();
-                this.initializeCamera();
                 
-                // Log login event
-                this.addActivityLog(`User ${this.userData.name} logged in`, 'system', 'green');
-                
-                if (this.userData.role === 'student') {
-                    this.addActivityLog(`Exam "${this.userData.currentExam}" started`, 'system', 'blue');
+                // Start camera if available
+                if (this.cameraStream) {
+                    this.startCamera();
                 }
             }
 
             hideDashboard() {
                 document.getElementById('login-page').classList.remove('hidden');
                 document.getElementById('dashboard').classList.add('hidden');
+                document.getElementById('setup-wizard').classList.add('hidden');
             }
 
             updateUserInterface() {
@@ -746,294 +1356,231 @@
                 }
             }
 
-            // Camera Management
-            async initializeCamera() {
-                try {
-                    this.addActivityLog('Initializing camera...', 'system', 'blue');
-                    
-                    // Get camera devices
-                    await this.getCameraDevices();
-                    
-                    // Start with the first camera
-                    await this.startCamera(0);
-                    
-                } catch (error) {
-                    console.error('Error initializing camera:', error);
-                    this.addActivityLog('Failed to initialize camera: ' + error.message, 'error', 'red');
-                    this.showCameraError();
+            // WebSocket Management
+            initializeWebSocket() {
+                const wsUrl = 'ws://localhost:8765';
+                
+                // Close existing connection if any
+                if (this.ws) {
+                    this.ws.close();
                 }
-            }
 
-            async getCameraDevices() {
-                try {
-                    // Get all video input devices
-                    const devices = await navigator.mediaDevices.enumerateDevices();
-                    this.cameraDevices = devices.filter(device => device.kind === 'videoinput');
-                    
-                    if (this.cameraDevices.length === 0) {
-                        throw new Error('No camera devices found');
+                // Clear any existing reconnect timeout
+                if (this.reconnectTimeout) {
+                    clearTimeout(this.reconnectTimeout);
+                }
+
+                console.log('🔗 Attempting to connect to WebSocket server...');
+                this.ws = new WebSocket(wsUrl);
+
+                // Connection established
+                this.ws.onopen = (event) => {
+                    console.log('✅ WebSocket connection established successfully');
+                    this.isConnected = true;
+                    this.reconnectAttempts = 0;
+                    this.updateConnectionStatus(true);
+                    this.addActivityLog('Connected to proctoring server', 'system', 'green');
+                };
+
+                // Message received
+                this.ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        this.updateDashboard(data);
+                    } catch (error) {
+                        console.error('Error parsing WebSocket message:', error);
                     }
-                    
-                    this.addActivityLog(`Found ${this.cameraDevices.length} camera(s)`, 'system', 'green');
-                    
-                } catch (error) {
-                    console.error('Error getting camera devices:', error);
-                    throw new Error('Cannot access camera devices');
-                }
-            }
+                };
 
-            async startCamera(deviceIndex) {
-                try {
-                    // Stop current camera if active
-                    if (this.cameraStream) {
-                        this.stopCamera();
+                // Connection closed
+                this.ws.onclose = (event) => {
+                    console.log('🔌 WebSocket connection closed');
+                    this.isConnected = false;
+                    this.updateConnectionStatus(false);
+                    
+                    if (event.code !== 1000) {
+                        this.addActivityLog('Connection lost', 'system', 'yellow');
+                        this.handleReconnection();
                     }
+                };
 
-                    const constraints = {
-                        video: {
-                            deviceId: this.cameraDevices[deviceIndex]?.deviceId ? { exact: this.cameraDevices[deviceIndex].deviceId } : undefined,
-                            width: { ideal: 1280 },
-                            height: { ideal: 720 },
-                            frameRate: { ideal: 30 }
-                        }
-                    };
-
-                    // Request camera access
-                    this.cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
-                    
-                    // Display camera feed
-                    const videoElement = document.getElementById('live-camera-feed');
-                    videoElement.srcObject = this.cameraStream;
-                    videoElement.classList.remove('hidden');
-                    
-                    // Hide placeholder
-                    document.getElementById('video-placeholder').classList.add('hidden');
-                    
-                    // Update status
-                    this.isCameraActive = true;
-                    this.updateCameraStatus('active');
-                    this.addActivityLog('Camera feed started successfully', 'system', 'green');
-                    
-                    // Start frame processing
-                    this.startFrameProcessing();
-                    
-                    // Update resolution display
-                    const track = this.cameraStream.getVideoTracks()[0];
-                    const settings = track.getSettings();
-                    document.getElementById('resolution-display').textContent = 
-                        `${settings.width || '--'}x${settings.height || '--'}`;
-                        
-                } catch (error) {
-                    console.error('Error starting camera:', error);
-                    this.addActivityLog('Camera access denied or failed: ' + error.message, 'error', 'red');
-                    this.showCameraError();
-                }
+                // Connection error
+                this.ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    this.isConnected = false;
+                    this.updateConnectionStatus(false);
+                };
             }
 
-            stopCamera() {
-                if (this.cameraStream) {
-                    this.cameraStream.getTracks().forEach(track => track.stop());
-                    this.cameraStream = null;
-                }
-                this.isCameraActive = false;
-                this.updateCameraStatus('inactive');
-            }
-
-            async switchCamera() {
-                if (this.cameraDevices.length <= 1) {
-                    this.addActivityLog('Only one camera available', 'system', 'yellow');
+            handleReconnection() {
+                if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+                    console.error('❌ Max reconnection attempts reached');
+                    this.addActivityLog('Failed to reconnect after multiple attempts', 'error', 'red');
+                    this.showReconnectionFailed();
                     return;
                 }
 
-                this.currentCameraIndex = (this.currentCameraIndex + 1) % this.cameraDevices.length;
-                this.addActivityLog(`Switching to camera ${this.currentCameraIndex + 1}`, 'system', 'blue');
+                const baseDelay = 1000;
+                const maxDelay = 30000;
+                const delay = Math.min(baseDelay * Math.pow(1.5, this.reconnectAttempts), maxDelay);
                 
-                await this.startCamera(this.currentCameraIndex);
+                this.reconnectAttempts++;
+                console.log('🔄 Reconnection attempt ' + this.reconnectAttempts + ' in ' + delay + 'ms');
+                
+                this.reconnectTimeout = setTimeout(() => {
+                    this.initializeWebSocket();
+                }, delay);
             }
 
-            updateCameraStatus(status) {
-                const statusElement = document.getElementById('camera-status');
-                const statusText = document.getElementById('camera-status-text');
-                const feedType = document.getElementById('feed-type');
-                
-                if (status === 'active') {
-                    statusElement.textContent = '🟢 ACTIVE';
-                    statusElement.className = 'font-semibold text-green-400';
-                    statusText.textContent = 'Camera Active';
-                    feedType.textContent = 'Live Camera';
-                    feedType.className = 'font-semibold text-green-400';
-                } else {
-                    statusElement.textContent = '🔴 INACTIVE';
-                    statusElement.className = 'font-semibold text-red-400';
-                    statusText.textContent = 'Camera Inactive';
-                    feedType.textContent = 'No Feed';
-                    feedType.className = 'font-semibold text-red-400';
-                }
-            }
-
-            showCameraError() {
+            showReconnectionFailed() {
                 const videoPlaceholder = document.getElementById('video-placeholder');
-                videoPlaceholder.innerHTML = `
-                    <div class="text-center">
-                        <i class="fas fa-exclamation-triangle fa-3x mb-3 text-red-400"></i>
-                        <p class="text-red-400 font-semibold">Camera Error</p>
-                        <p class="text-gray-400 text-sm mt-2">Please check camera permissions and try again</p>
-                        <button onclick="window.proctoringDashboard.initializeCamera()" class="bg-blue-500 text-white px-4 py-2 rounded mt-3">
-                            Retry Camera
-                        </button>
-                    </div>
-                `;
-                videoPlaceholder.classList.remove('hidden');
-            }
-
-            startFrameProcessing() {
-                // Process frames for detection and analytics
-                this.processFrame();
-            }
-
-            processFrame() {
-                if (!this.isCameraActive) return;
-
-                const video = document.getElementById('live-camera-feed');
-                const canvas = document.getElementById('capture-canvas');
-                const ctx = canvas.getContext('2d');
-
-                // Set canvas dimensions to match video
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-
-                // Draw current video frame to canvas
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                // Process the frame for detection
-                this.analyzeFrame(canvas);
-
-                // Calculate FPS
-                this.updateFPS();
-
-                // Continue processing
-                requestAnimationFrame(() => this.processFrame());
-            }
-
-            analyzeFrame(canvas) {
-                // Simulate AI analysis - in a real system, this would use actual ML models
-                this.simulateFaceDetection();
-                this.simulateGazeTracking();
-                this.updateDetectionOverlay();
-                
-                // Update metrics with simulated data
-                this.updateMetricsWithSimulatedData();
-            }
-
-            simulateFaceDetection() {
-                // Simulate face detection with some randomness
-                const hasFace = Math.random() > 0.1; // 90% chance of face detection
-                
-                if (hasFace) {
-                    this.faceDetectionCount++;
-                    this.faceDetected = true;
-                    
-                    if (this.faceDetectionCount > 5) {
-                        document.getElementById('face-detection-status').textContent = '🟢 DETECTED';
-                        document.getElementById('face-detection-status').className = 'font-semibold text-green-400';
-                        document.getElementById('detection-status').textContent = 'Face Detected';
-                    }
-                } else {
-                    this.faceDetected = false;
-                    this.faceDetectionCount = Math.max(0, this.faceDetectionCount - 1);
-                    
-                    if (this.faceDetectionCount === 0) {
-                        document.getElementById('face-detection-status').textContent = '🔴 NOT DETECTED';
-                        document.getElementById('face-detection-status').className = 'font-semibold text-red-400';
-                        document.getElementById('detection-status').textContent = 'No Face';
-                    }
-                }
-            }
-
-            simulateGazeTracking() {
-                // Simulate gaze tracking - this would be real in production
-                // For demo purposes, we'll generate random but somewhat consistent data
-            }
-
-            updateDetectionOverlay() {
-                const overlay = document.getElementById('detection-overlay');
-                overlay.innerHTML = '';
-                
-                if (this.faceDetected) {
-                    // Create face bounding box
-                    const faceBox = document.createElement('div');
-                    faceBox.className = 'face-box';
-                    
-                    // Simulated face position (centered with slight movement)
-                    const width = 150 + Math.random() * 50;
-                    const height = 200 + Math.random() * 50;
-                    const left = 320 - width/2 + (Math.random() * 40 - 20);
-                    const top = 240 - height/2 + (Math.random() * 40 - 20);
-                    
-                    faceBox.style.width = `${width}px`;
-                    faceBox.style.height = `${height}px`;
-                    faceBox.style.left = `${left}px`;
-                    faceBox.style.top = `${top}px`;
-                    
-                    overlay.appendChild(faceBox);
-                    
-                    // Create eye dots
-                    const leftEye = document.createElement('div');
-                    leftEye.className = 'eye-dot';
-                    leftEye.style.left = `${left + width * 0.3}px`;
-                    leftEye.style.top = `${top + height * 0.35}px`;
-                    
-                    const rightEye = document.createElement('div');
-                    rightEye.className = 'eye-dot';
-                    rightEye.style.left = `${left + width * 0.7}px`;
-                    rightEye.style.top = `${top + height * 0.35}px`;
-                    
-                    overlay.appendChild(leftEye);
-                    overlay.appendChild(rightEye);
-                    
-                    // Create gaze direction line
-                    const gazeAngle = (Math.random() - 0.5) * 60; // -30 to 30 degrees
-                    const gazeLine = document.createElement('div');
-                    gazeLine.className = 'gaze-line';
-                    gazeLine.style.left = `${left + width * 0.5}px`;
-                    gazeLine.style.top = `${top + height * 0.4}px`;
-                    gazeLine.style.width = '50px';
-                    gazeLine.style.transform = `rotate(${gazeAngle}deg)`;
-                    
-                    overlay.appendChild(gazeLine);
-                } else {
-                    // No face detected warning
-                    const warning = document.createElement('div');
-                    warning.className = 'absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center';
-                    warning.innerHTML = `
-                        <div class="bg-red-500 text-white p-4 rounded-lg">
-                            <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
-                            <p>Face not detected</p>
-                            <p class="text-sm mt-1">Please position yourself in front of the camera</p>
+                if (videoPlaceholder) {
+                    videoPlaceholder.innerHTML = `
+                        <div class="text-center">
+                            <i class="fas fa-exclamation-triangle fa-3x mb-3 text-red-400"></i>
+                            <p class="text-red-400 font-semibold">Connection Failed</p>
+                            <p class="text-gray-400 text-sm mt-2">Please refresh the page to try again</p>
+                            <button onclick="location.reload()" class="bg-blue-500 text-white px-4 py-2 rounded mt-3">
+                                Refresh Page
+                            </button>
                         </div>
                     `;
-                    overlay.appendChild(warning);
                 }
             }
 
-            updateMetricsWithSimulatedData() {
-                // Generate realistic but varying metrics
-                const headYaw = Math.abs((Math.random() - 0.5) * 25); // 0-25 degrees
-                const gazeDeviation = Math.random() * 0.8; // 0-0.8
-                const deviceDetected = Math.random() < 0.05; // 5% chance
+            disconnectWebSocket() {
+                if (this.ws) {
+                    this.ws.close(1000, 'User logout');
+                    this.ws = null;
+                }
+                if (this.reconnectTimeout) {
+                    clearTimeout(this.reconnectTimeout);
+                }
+                this.isConnected = false;
+            }
+
+            updateConnectionStatus(connected) {
+                const statusElement = document.getElementById('connection-status');
+                const dot = statusElement.querySelector('.connection-dot');
                 
-                // Update metrics display
-                this.updateMetricElement('head-yaw-value', `${headYaw.toFixed(1)}°`, headYaw, 30);
+                if (!statusElement) return;
+
+                if (connected) {
+                    dot.className = 'connection-dot connected';
+                    statusElement.innerHTML = '<span class="connection-dot connected"></span>System Connected';
+                    statusElement.className = 'text-green-300 font-semibold';
+                } else {
+                    dot.className = 'connection-dot disconnected';
+                    statusElement.innerHTML = '<span class="connection-dot disconnected"></span>Connecting... (' + this.reconnectAttempts + '/' + this.maxReconnectAttempts + ')';
+                    statusElement.className = 'text-red-300 font-semibold';
+                }
+            }
+
+            updateDashboard(data) {
+                try {
+                    // Update system status first
+                    this.updateSystemStatus(data);
+                    
+                    // Update data status
+                    document.getElementById('data-status').textContent = 'Receiving live data...';
+                    
+                    // Update video feed
+                    if (data.frame && data.frame.length > 0) {
+                        this.updateVideoFeed(data.frame);
+                    }
+                    
+                    // Update metrics
+                    if (data.metrics) {
+                        this.updateMetrics(data.metrics);
+                        this.updateAlerts(data.metrics);
+                        this.updateActivityLogFromMetrics(data.metrics);
+                    }
+                    
+                    // Update performance metrics
+                    this.updatePerformanceMetrics(data);
+                    
+                } catch (error) {
+                    console.error('Error updating dashboard:', error);
+                }
+            }
+
+            updateSystemStatus(data) {
+                // Update detection status
+                const detectionStatus = document.getElementById('detection-status');
+                const facesCount = document.getElementById('faces-count');
+                const stableFrames = document.getElementById('stable-frames');
+                
+                if (data.camera_status === 'real') {
+                    detectionStatus.textContent = '🟢 REAL CAMERA';
+                    detectionStatus.className = 'font-semibold text-green-400';
+                } else {
+                    detectionStatus.textContent = '🟡 SIMULATED';
+                    detectionStatus.className = 'font-semibold text-yellow-400';
+                }
+                
+                // Update faces count
+                const facesDetected = data.faces_detected || 0;
+                facesCount.textContent = facesDetected;
+                facesCount.className = facesDetected > 0 ? 
+                    'font-semibold text-green-400' : 'font-semibold text-red-400';
+                
+                // Update stable frames
+                if (data.metrics && data.metrics.stable_frames) {
+                    stableFrames.textContent = data.metrics.stable_frames + ' frames';
+                }
+            }
+
+            updateVideoFeed(frameData) {
+                const videoFeed = document.getElementById('webcam-canvas');
+                const videoPlaceholder = document.getElementById('video-placeholder');
+                
+                if (!videoFeed || !videoPlaceholder) return;
+
+                // Create an image from the base64 data
+                const img = new Image();
+                img.onload = () => {
+                    // Draw the image to canvas
+                    this.ctx.clearRect(0, 0, this.canvasElement.width, this.canvasElement.height);
+                    this.ctx.drawImage(img, 0, 0, this.canvasElement.width, this.canvasElement.height);
+                    
+                    videoFeed.classList.remove('hidden');
+                    videoPlaceholder.classList.add('hidden');
+                };
+                
+                img.onerror = () => {
+                    videoFeed.classList.add('hidden');
+                    videoPlaceholder.classList.remove('hidden');
+                    videoPlaceholder.innerHTML = `
+                        <div class="text-center">
+                            <i class="fas fa-exclamation-triangle fa-3x mb-3 text-yellow-400"></i>
+                            <p class="text-yellow-400">Video feed error</p>
+                        </div>
+                    `;
+                };
+
+                img.src = 'data:image/jpeg;base64,' + frameData;
+            }
+
+            updateMetrics(metrics) {
+                // Head pose
+                const headYaw = Math.abs(metrics.head_yaw || 0);
+                this.updateMetricElement('head-yaw-value', headYaw.toFixed(1) + '°', headYaw, 30);
+                
+                // Update head pose progress bar
                 const headPercentage = Math.min((headYaw / 30) * 100, 100);
                 this.updateProgressBar('head-yaw-bar', headPercentage, headYaw, 10, 20);
 
+                // Eye gaze
+                const gazeDeviation = metrics.gaze_deviation || 0;
                 this.updateMetricElement('gaze-deviation-value', gazeDeviation.toFixed(3), gazeDeviation, 1.0);
+                
+                // Update gaze progress bar
                 const gazePercentage = Math.min((gazeDeviation / 1.0) * 100, 100);
                 this.updateProgressBar('gaze-deviation-bar', gazePercentage, gazeDeviation, 0.3, 0.6);
 
+                // Device detection
+                const deviceDetected = metrics.device_detected || false;
                 this.updateDeviceStatus(deviceDetected);
-                this.updateFocusScore(headYaw, gazeDeviation, deviceDetected);
-                this.updateAlerts(headYaw, gazeDeviation, deviceDetected);
             }
 
             updateMetricElement(elementId, value, currentValue, maxValue) {
@@ -1057,15 +1604,15 @@
                 const element = document.getElementById(elementId);
                 if (!element) return;
 
-                element.style.width = `${percentage}%`;
+                element.style.width = percentage + '%';
 
                 // Update color based on thresholds
                 if (currentValue > dangerThreshold) {
-                    element.className = 'h-2 rounded-full transition-all duration-300 bg-red-400';
+                    element.className = 'progress-fill bg-red-400';
                 } else if (currentValue > warningThreshold) {
-                    element.className = 'h-2 rounded-full transition-all duration-300 bg-yellow-400';
+                    element.className = 'progress-fill bg-yellow-400';
                 } else {
-                    element.className = 'h-2 rounded-full transition-all duration-300 bg-green-400';
+                    element.className = 'progress-fill bg-green-400';
                 }
             }
 
@@ -1076,126 +1623,23 @@
                 if (deviceDetected) {
                     element.textContent = 'DETECTED';
                     element.className = 'text-2xl font-bold text-red-400';
-                    if (!this.alertHistory.includes('device')) {
-                        this.addActivityLog('Unauthorized device detected!', 'alert', 'red');
-                        this.alertHistory.push('device');
-                    }
                 } else {
                     element.textContent = 'CLEAR';
                     element.className = 'text-2xl font-bold text-green-400';
-                    if (this.alertHistory.includes('device')) {
-                        this.alertHistory = this.alertHistory.filter(a => a !== 'device');
-                    }
                 }
             }
 
-            updateFocusScore(headYaw, gazeDeviation, deviceDetected) {
-                // Calculate focus score based on multiple factors
-                let score = 100;
-                
-                // Deduct points for head movement
-                if (headYaw > 20) score -= 30;
-                else if (headYaw > 10) score -= 15;
-                else if (headYaw > 5) score -= 5;
-                
-                // Deduct points for gaze deviation
-                if (gazeDeviation > 0.8) score -= 30;
-                else if (gazeDeviation > 0.5) score -= 15;
-                else if (gazeDeviation > 0.3) score -= 5;
-                
-                // Deduct points for device detection
-                if (deviceDetected) score -= 40;
-                
-                // Ensure score is within bounds
-                score = Math.max(0, Math.min(100, score));
-                
-                // Update focus score display
-                const focusScoreElement = document.getElementById('focus-score-value');
-                const focusScoreBar = document.getElementById('focus-score-bar');
-                const focusLevelElement = document.getElementById('focus-level');
-                
-                focusScoreElement.textContent = `${Math.round(score)}%`;
-                focusScoreBar.style.width = `${score}%`;
-                
-                // Update color based on score
-                if (score >= 80) {
-                    focusScoreElement.className = 'text-2xl font-bold text-green-400';
-                    focusScoreBar.className = 'h-2 rounded-full transition-all duration-300 bg-green-400';
-                    focusLevelElement.textContent = 'Excellent';
-                    focusLevelElement.className = 'font-semibold text-green-400';
-                } else if (score >= 60) {
-                    focusScoreElement.className = 'text-2xl font-bold text-yellow-400';
-                    focusScoreBar.className = 'h-2 rounded-full transition-all duration-300 bg-yellow-400';
-                    focusLevelElement.textContent = 'Good';
-                    focusLevelElement.className = 'font-semibold text-yellow-400';
-                } else if (score >= 40) {
-                    focusScoreElement.className = 'text-2xl font-bold text-orange-400';
-                    focusScoreBar.className = 'h-2 rounded-full transition-all duration-300 bg-orange-400';
-                    focusLevelElement.textContent = 'Fair';
-                    focusLevelElement.className = 'font-semibold text-orange-400';
-                } else {
-                    focusScoreElement.className = 'text-2xl font-bold text-red-400';
-                    focusScoreBar.className = 'h-2 rounded-full transition-all duration-300 bg-red-400';
-                    focusLevelElement.textContent = 'Poor';
-                    focusLevelElement.className = 'font-semibold text-red-400';
-                }
-                
-                // Update distraction indicator
-                this.updateDistractionIndicator(score);
-            }
-
-            updateDistractionIndicator(score) {
-                const distractionIndicator = document.getElementById('distraction-indicator');
-                
-                if (score < 50) {
-                    // User is distracted
-                    distractionIndicator.classList.remove('hidden');
-                    
-                    // Start tracking distraction time if not already
-                    if (!this.distractionStartTime) {
-                        this.distractionStartTime = Date.now();
-                        this.addActivityLog('User appears distracted', 'alert', 'red');
-                    } else {
-                        // Check if distraction has been ongoing for more than 10 seconds
-                        const distractionDuration = (Date.now() - this.distractionStartTime) / 1000;
-                        if (distractionDuration > 10 && !this.alertHistory.includes('prolonged_distraction')) {
-                            this.addActivityLog('Prolonged distraction detected', 'alert', 'red');
-                            this.alertHistory.push('prolonged_distraction');
-                        }
-                    }
-                } else {
-                    // User is focused
-                    distractionIndicator.classList.add('hidden');
-                    
-                    // Reset distraction tracking
-                    if (this.distractionStartTime) {
-                        const distractionDuration = (Date.now() - this.distractionStartTime) / 1000;
-                        if (distractionDuration > 5) {
-                            this.addActivityLog('User is now focused', 'system', 'green');
-                        }
-                        this.distractionStartTime = null;
-                    }
-                    
-                    // Remove prolonged distraction alert if it exists
-                    if (this.alertHistory.includes('prolonged_distraction')) {
-                        this.alertHistory = this.alertHistory.filter(a => a !== 'prolonged_distraction');
-                    }
-                }
-            }
-
-            updateAlerts(headYaw, gazeDeviation, deviceDetected) {
+            updateAlerts(metrics) {
                 const alertPanel = document.getElementById('alert-panel');
                 const alertStatus = document.getElementById('alert-status');
                 const alertMessage = document.getElementById('alert-message');
-                const alertIcon = alertPanel?.querySelector('i');
+                const alertIcon = alertPanel.querySelector('i');
 
                 if (!alertPanel || !alertStatus || !alertMessage) return;
 
-                const headAlert = headYaw > 20;
-                const gazeAlert = gazeDeviation > 0.6;
-                const noFaceAlert = !this.faceDetected;
-
-                const hasAlert = headAlert || gazeAlert || deviceDetected || noFaceAlert;
+                const hasAlert = metrics.alert_active || false;
+                const facesDetected = metrics.faces_detected || 0;
+                const latestAlert = metrics.latest_alert_type || '';
 
                 if (hasAlert) {
                     // Alert state
@@ -1203,19 +1647,22 @@
                     alertStatus.textContent = 'ALERT!';
                     alertStatus.className = 'text-2xl font-bold text-red-400 mb-2';
                     alertIcon.className = 'fas fa-exclamation-triangle text-5xl text-red-400 mb-4';
+                    alertMessage.textContent = latestAlert || 'Suspicious activity detected';
 
-                    // Determine alert type
-                    if (deviceDetected) {
-                        alertMessage.textContent = 'Unauthorized device detected!';
-                    } else if (noFaceAlert) {
-                        alertMessage.textContent = 'Face not detected! Please position yourself in front of the camera.';
-                    } else if (headAlert && gazeAlert) {
-                        alertMessage.textContent = 'Multiple suspicious behaviors detected';
-                    } else if (headAlert) {
-                        alertMessage.textContent = 'Head movement outside allowed range';
-                    } else if (gazeAlert) {
-                        alertMessage.textContent = 'Eye gaze deviation detected';
+                    // Show floating alert for critical alerts
+                    if (latestAlert.includes('MULTIPLE_FACES') || 
+                        latestAlert.includes('DEVICE_DETECTED') ||
+                        latestAlert.includes('TERMINATED')) {
+                        this.showFloatingAlert(latestAlert, 'error');
                     }
+                    
+                } else if (facesDetected === 0) {
+                    // No face detected warning
+                    alertPanel.className = 'glass-card rounded-2xl p-6 bg-yellow-500/20 border-yellow-400/30';
+                    alertStatus.textContent = 'WARNING';
+                    alertStatus.className = 'text-2xl font-bold text-yellow-400 mb-2';
+                    alertIcon.className = 'fas fa-exclamation-triangle text-5xl text-yellow-400 mb-4';
+                    alertMessage.textContent = 'No face detected - please position yourself in camera view';
                 } else {
                     // Clear state
                     alertPanel.className = 'glass-card rounded-2xl p-6 bg-green-500/20 border-green-400/30';
@@ -1226,44 +1673,26 @@
                 }
             }
 
-            updateFPS() {
-                const now = performance.now();
+            updatePerformanceMetrics(data) {
+                const now = Date.now();
                 
+                // Calculate frame rate
                 if (!this.lastFrameTime) {
                     this.lastFrameTime = now;
                     this.frameCount = 0;
-                    return;
                 }
                 
                 this.frameCount++;
                 
                 if (now - this.lastFrameTime >= 1000) {
-                    this.currentFPS = Math.round((this.frameCount * 1000) / (now - this.lastFrameTime));
+                    const fps = Math.round((this.frameCount * 1000) / (now - this.lastFrameTime));
                     this.lastFrameTime = now;
                     this.frameCount = 0;
                     
                     // Update FPS display
-                    document.getElementById('fps-display').textContent = this.currentFPS;
-                    document.getElementById('fps-display-main').textContent = `${this.currentFPS} FPS`;
+                    document.getElementById('fps-display').textContent = fps;
+                    document.getElementById('fps-display-main').textContent = fps + ' FPS';
                 }
-            }
-
-            captureFrame() {
-                if (!this.isCameraActive) return;
-
-                const canvas = document.getElementById('capture-canvas');
-                const link = document.createElement('a');
-                
-                // Convert canvas to data URL
-                link.href = canvas.toDataURL('image/jpeg', 0.8);
-                link.download = `proctoring-capture-${new Date().toISOString().replace(/[:.]/g, '-')}.jpg`;
-                
-                // Trigger download
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                this.addActivityLog('Frame captured for review', 'system', 'blue');
             }
 
             // Activity Log Management
@@ -1286,6 +1715,60 @@
                 this.updateActivityLogUI();
             }
 
+            updateActivityLogFromMetrics(metrics) {
+                const facesDetected = metrics.faces_detected || 0;
+                const movementDetected = metrics.movement_detected || false;
+                const alertActive = metrics.alert_active || false;
+                const stableFrames = metrics.stable_frames || 0;
+                const latestAlert = metrics.latest_alert_type || '';
+
+                // Face detection alerts
+                if (facesDetected === 0 && !this.alertHistory.includes('no_face')) {
+                    this.addActivityLog('No face detected - please position yourself in frame', 'alert', 'red');
+                    this.alertHistory.push('no_face');
+                } else if (facesDetected > 0 && this.alertHistory.includes('no_face')) {
+                    this.addActivityLog('Face detected successfully', 'system', 'green');
+                    this.alertHistory = this.alertHistory.filter(a => a !== 'no_face');
+                }
+
+                // Movement alerts
+                if (movementDetected && !this.alertHistory.includes('movement')) {
+                    this.addActivityLog('Significant movement detected', 'warning', 'yellow');
+                    this.alertHistory.push('movement');
+                } else if (!movementDetected && this.alertHistory.includes('movement')) {
+                    this.alertHistory = this.alertHistory.filter(a => a !== 'movement');
+                }
+
+                // Alert logging
+                if (alertActive && latestAlert && !this.alertHistory.includes(latestAlert)) {
+                    this.addActivityLog(latestAlert, 'alert', 'red');
+                    this.alertHistory.push(latestAlert);
+                    
+                    // Remove old alerts from history
+                    if (this.alertHistory.length > 5) {
+                        this.alertHistory.shift();
+                    }
+                }
+
+                // Stability milestones
+                if (stableFrames === 10 && !this.alertHistory.includes('stable_10')) {
+                    this.addActivityLog('Face stable for 10 frames', 'info', 'blue');
+                    this.alertHistory.push('stable_10');
+                }
+                if (stableFrames === 30 && !this.alertHistory.includes('stable_30')) {
+                    this.addActivityLog('Face stable for 30 frames - good focus!', 'info', 'green');
+                    this.alertHistory.push('stable_30');
+                }
+
+                // Multiple faces alert
+                if (facesDetected > 1 && !this.alertHistory.includes('multiple_faces')) {
+                    this.addActivityLog('Multiple faces detected in frame', 'warning', 'yellow');
+                    this.alertHistory.push('multiple_faces');
+                } else if (facesDetected <= 1 && this.alertHistory.includes('multiple_faces')) {
+                    this.alertHistory = this.alertHistory.filter(a => a !== 'multiple_faces');
+                }
+            }
+
             updateActivityLogUI() {
                 const logContainer = document.getElementById('activity-log');
                 if (!logContainer) return;
@@ -1295,9 +1778,11 @@
                 this.activityLog.forEach(entry => {
                     const logElement = document.createElement('div');
                     const colorClass = this.getColorClass(entry.color);
-                    logElement.className = `border-l-4 pl-3 py-1 mb-2 ${colorClass.border} ${colorClass.text}`;
+                    logElement.className = 'border-l-4 pl-3 py-1 mb-2 ' + colorClass.border + ' ' + colorClass.text;
                     logElement.innerHTML = `
-                        <i class="fas fa-${entry.type === 'alert' ? 'exclamation-triangle' : 'info-circle'} mr-2"></i>
+                        <i class="fas fa-${entry.type === 'alert' ? 'exclamation-triangle' : 
+                                          entry.type === 'warning' ? 'exclamation-circle' : 
+                                          entry.type === 'info' ? 'info-circle' : 'check-circle'} mr-2"></i>
                         <span class="font-mono">[${entry.timestamp}]</span> ${entry.message}
                     `;
                     logContainer.appendChild(logElement);
@@ -1324,7 +1809,9 @@
                     const seconds = Math.floor((elapsed % 60000) / 1000);
                     
                     document.getElementById('session-timer').textContent = 
-                        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                        hours.toString().padStart(2, '0') + ':' + 
+                        minutes.toString().padStart(2, '0') + ':' + 
+                        seconds.toString().padStart(2, '0');
                 }, 1000);
             }
 
@@ -1334,41 +1821,55 @@
             }
 
             // UI Helpers
-            showSuccessMessage(message) {
-                this.showMessage(message, 'green');
-            }
-
-            showErrorMessage(message) {
-                this.showMessage(message, 'red');
-            }
-
-            showMessage(message, color) {
-                // Remove existing message
-                const existingMessage = document.querySelector('.login-message');
-                if (existingMessage) {
-                    existingMessage.remove();
+            showFloatingAlert(message, type = 'info') {
+                const alertContainer = document.getElementById('floating-alerts');
+                const alertId = 'alert-' + Date.now();
+                
+                const alertDiv = document.createElement('div');
+                alertDiv.id = alertId;
+                
+                let bgColor, icon, textColor;
+                
+                switch (type) {
+                    case 'success':
+                        bgColor = 'bg-green-500';
+                        icon = 'fa-check-circle';
+                        textColor = 'text-white';
+                        break;
+                    case 'error':
+                        bgColor = 'bg-red-500';
+                        icon = 'fa-exclamation-triangle';
+                        textColor = 'text-white';
+                        break;
+                    case 'warning':
+                        bgColor = 'bg-yellow-500';
+                        icon = 'fa-exclamation-circle';
+                        textColor = 'text-white';
+                        break;
+                    default:
+                        bgColor = 'bg-blue-500';
+                        icon = 'fa-info-circle';
+                        textColor = 'text-white';
                 }
-
-                // Create new message
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `login-message mt-4 p-3 rounded-lg text-white text-center ${
-                    color === 'green' ? 'bg-green-500' : 'bg-red-500'
-                }`;
-                messageDiv.innerHTML = `
-                    <i class="fas fa-${color === 'green' ? 'check' : 'exclamation'}-circle mr-2"></i>
-                    ${message}
+                
+                alertDiv.className = 'floating-alert ' + bgColor + ' ' + textColor + ' p-4 rounded-lg shadow-lg max-w-sm';
+                alertDiv.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fas ${icon} mr-3"></i>
+                        <span class="flex-1">${message}</span>
+                        <button onclick="document.getElementById('${alertId}').remove()" class="ml-4">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
                 `;
-
-                // Add to login form
-                const loginForm = document.getElementById('login-form');
-                if (loginForm && loginForm.parentNode) {
-                    loginForm.parentNode.insertBefore(messageDiv, loginForm.nextSibling);
-                }
-
+                
+                alertContainer.appendChild(alertDiv);
+                
                 // Auto-remove after 5 seconds
                 setTimeout(() => {
-                    if (messageDiv.parentNode) {
-                        messageDiv.remove();
+                    const alertElement = document.getElementById(alertId);
+                    if (alertElement) {
+                        alertElement.remove();
                     }
                 }, 5000);
             }
