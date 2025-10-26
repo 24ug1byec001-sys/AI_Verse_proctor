@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Exam Proctoring System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .metric-card {
+            transition: all 0.3s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+        .alert-pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+        }
+        .form-input {
+            transition: all 0.3s ease;
+        }
+        .form-input:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .connection-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .connected { background-color: #10B981; }
+        .connecting { background-color: #F59E0B; }
+        .disconnected { background-color: #EF4444; }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .status-real { background: rgba(34, 197, 94, 0.2); color: #10B981; border: 1px solid #10B981; }
+        .status-simulated { background: rgba(245, 158, 11, 0.2); color: #F59E0B; border: 1px solid #F59E0B; }
+        .distraction-indicator {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            z-index: 10;
+            animation: distractionPulse 1.5s infinite;
+        }
+        @keyframes distractionPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .camera-status-indicator {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            z-index: 10;
+        }
+        .detection-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .face-box {
+            position: absolute;
+            border: 2px solid #10B981;
+            border-radius: 8px;
+            background: rgba(16, 185, 129, 0.1);
+        }
+        .eye-dot {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #F59E0B;
+        }
+        .gaze-line {
+            position: absolute;
+            height: 2px;
+            background: #F59E0B;
+            transform-origin: 0 0;
+        }
+        .capture-canvas {
+            display: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Login Page -->
+    <div id="login-page" class="min-h-screen flex items-center justify-center p-6 fade-in">
+        <div class="login-container rounded-3xl shadow-2xl p-8 w-full max-w-md">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-graduation-cap text-white text-2xl"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Secure Exam Proctor</h1>
+                <p class="text-gray-600">AI-powered online examination monitoring</p>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-envelope mr-2"></i>Email Address
+                    </label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        required
+                        class="form-input w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                        placeholder="student@university.edu"
+                    >
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-lock mr-2"></i>Password
+                    </label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        required
+                        class="form-input w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                        placeholder="Enter your password"
+                    >
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input 
+                            type="checkbox" 
+                            id="remember-me"
+                            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        >
+                        <label for="remember-me" class="ml-2 text-sm text-gray-600">Remember me</label>
+                    </div>
+                    <a href="#" class="text-sm text-blue-600 hover:text-blue-500">Forgot password?</a>
+                </div>
+
+                <button 
+                    type="submit"
+                    class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
+                >
+                    <i class="fas fa-sign-in-alt mr-2"></i>Sign In to Exam
+                </button>
+            </form>
+
+            <!-- Demo Accounts -->
+            <div class="mt-6 p-4 bg-gray-100 rounded-xl">
+                <h4 class="font-semibold text-gray-700 mb-3 text-center">Demo Accounts (Click to Auto-fill)</h4>
+                <div class="grid grid-cols-2 gap-2">
+                    <button class="demo-account-btn bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded-lg text-sm transition-colors" data-email="student1@university.edu" data-password="password123">
+                        Student 1
+                    </button>
+                    <button class="demo-account-btn bg-green-500 hover:bg-green-600 text-white py-2 px-3 rounded-lg text-sm transition-colors" data-email="demo@student.edu" data-password="demo123">
+                        Demo Student
+                    </button>
+                </div>
+            </div>
+
+            <!-- Camera Access Instructions -->
+            <div class="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                <h3 class="font-semibold text-blue-800 mb-2 flex items-center">
+                    <i class="fas fa-camera mr-2"></i>Camera Access Required
+                </h3>
+                <p class="text-sm text-blue-700 mb-3">This system requires camera access for real-time proctoring.</p>
+                <ul class="text-sm text-blue-700 space-y-1">
+                    <li>• Click "Allow" when prompted for camera access</li>
+                    <li>• Ensure good lighting on your face</li>
+                    <li>• Position yourself in the center of the frame</li>
+                </ul>
+            </div>
+
+            <!-- Footer -->
+            <div class="mt-8 text-center">
+                <p class="text-gray-500 text-sm">
+                    By signing in, you agree to our
+                    <a href="#" class="text-blue-600 hover:text-blue-500">Terms of Service</a>
+                    and
+                    <a href="#" class="text-blue-600 hover:text-blue-500">Privacy Policy</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard (Hidden Initially) -->
+    <div id="dashboard" class="min-h-screen hidden p-6">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="glass-card rounded-2xl p-6 mb-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-3xl font-bold text-white">
+                            <i class="fas fa-graduation-cap mr-3"></i>
+                            AI Exam Proctoring System
+                        </h1>
+                        <p class="text-gray-200 mt-2">Welcome, <span id="user-name" class="font-semibold">Student</span> | <span id="exam-name" class="font-semibold">Computer Science Final</span></p>
+                    </div>
+                    <div class="text-right">
+                        <div id="connection-status" class="text-green-300 font-semibold">
+                            <span class="connection-dot connected"></span>
+                            System Connected
+                        </div>
+                        <div class="text-gray-200 text-sm mt-1">
+                            Time: <span id="current-time">00:00:00</span> | 
+                            Session: <span id="session-timer">00:00:00</span>
+                        </div>
+                        <button id="logout-btn" class="mt-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column - Video Feed -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Video Feed -->
+                    <div class="glass-card rounded-2xl p-6">
+                        <h2 class="text-xl font-semibold text-white mb-4">
+                            <i class="fas fa-video mr-2"></i>Live Proctoring Feed
+                        </h2>
+                        <div class="bg-black rounded-xl overflow-hidden aspect-video flex items-center justify-center relative">
+                            <!-- Real Camera Feed -->
+                            <video id="live-camera-feed" autoplay playsinline class="w-full h-full object-cover hidden"></video>
+                            
+                            <!-- Fallback Image Feed -->
+                            <img id="video-feed" src="" alt="Live Feed" class="w-full h-full object-cover hidden">
+                            
+                            <div id="video-placeholder" class="text-gray-400 text-center">
+                                <i class="fas fa-camera fa-3x mb-3"></i>
+                                <p>Starting camera feed...</p>
+                            </div>
+                            <div class="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center">
+                                <i class="fas fa-circle mr-2 animate-pulse"></i>
+                                LIVE
+                            </div>
+                            
+                            <!-- Distraction Indicator -->
+                            <div id="distraction-indicator" class="distraction-indicator hidden">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                <span>DISTRACTED</span>
+                            </div>
+                            
+                            <!-- Camera Status Indicator -->
+                            <div id="camera-status-indicator" class="camera-status-indicator">
+                                <i class="fas fa-camera mr-1"></i>
+                                <span id="camera-status-text">Initializing Camera...</span>
+                            </div>
+                            
+                            <!-- Detection Overlay -->
+                            <div id="detection-overlay" class="detection-overlay"></div>
+                        </div>
+                        
+                        <!-- Camera Controls -->
+                        <div class="mt-4 flex justify-between items-center">
+                            <div class="flex space-x-2">
+                                <button id="toggle-camera-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+                                    <i class="fas fa-camera mr-2"></i>Switch Camera
+                                </button>
+                                <button id="capture-frame-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+                                    <i class="fas fa-camera-retro mr-2"></i>Capture Frame
+                                </button>
+                            </div>
+                            <div class="text-gray-300 text-sm">
+                                FPS: <span id="fps-display">0</span> | 
+                                Detection: <span id="detection-status">Initializing...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Status -->
+                    <div class="glass-card rounded-2xl p-4">
+                        <h3 class="text-lg font-semibold text-white mb-2">System Status</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                            <div class="flex items-center">
+                                <span class="text-gray-300 mr-2">Camera:</span>
+                                <span id="camera-status" class="font-semibold text-yellow-400">Checking...</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="text-gray-300 mr-2">Feed Type:</span>
+                                <span id="feed-type" class="font-semibold text-blue-400">Live Camera</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="text-gray-300 mr-2">Frame Rate:</span>
+                                <span id="fps-display-main" class="font-semibold text-green-400">0 FPS</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="text-gray-300 mr-2">Resolution:</span>
+                                <span id="resolution-display" class="font-semibold text-purple-400">--</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="text-gray-300 mr-2">Face Detection:</span>
+                                <span id="face-detection-status" class="font-semibold text-yellow-400">Waiting...</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="text-gray-300 mr-2">Focus Level:</span>
+                                <span id="focus-level" class="font-semibold text-green-400">Good</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Log -->
+                    <div class="glass-card rounded-2xl p-6">
+                        <h2 class="text-xl font-semibold text-white mb-4">
+                            <i class="fas fa-list-alt mr-2"></i>Proctoring Activity Log
+                        </h2>
+                        <div id="activity-log" class="bg-gray-900 rounded-lg p-4 h-64 overflow-y-auto text-sm">
+                            <div class="text-gray-400 text-center py-8">
+                                <i class="fas fa-clock fa-2x mb-2"></i>
+                                <p>Waiting for activity data...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Metrics & Alerts -->
+                <div class="space-y-6">
+                    <!-- Alert Status -->
+                    <div id="alert-panel" class="glass-card rounded-2xl p-6 bg-green-500/20 border-green-400/30">
+                        <h2 class="text-xl font-semibold text-white mb-4">
+                            <i class="fas fa-shield-alt mr-2"></i>Security Status
+                        </h2>
+                        <div class="text-center py-6">
+                            <i class="fas fa-check-circle text-5xl text-green-400 mb-4"></i>
+                            <h3 id="alert-status" class="text-2xl font-bold text-green-400 mb-2">ALL CLEAR</h3>
+                            <p id="alert-message" class="text-green-300">No suspicious activity detected</p>
+                        </div>
+                    </div>
+
+                    <!-- Real-time Metrics -->
+                    <div class="glass-card rounded-2xl p-6">
+                        <h2 class="text-xl font-semibold text-white mb-4">
+                            <i class="fas fa-chart-line mr-2"></i>Real-time Metrics
+                        </h2>
+                        <div class="space-y-4">
+                            <!-- Head Pose -->
+                            <div class="metric-card bg-white/10 rounded-xl p-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-gray-200 font-medium">
+                                        <i class="fas fa-user mr-2"></i>Head Pose
+                                    </span>
+                                    <span id="head-yaw-value" class="text-2xl font-bold text-green-400">0.0°</span>
+                                </div>
+                                <div class="w-full bg-gray-700 rounded-full h-2 mb-1">
+                                    <div id="head-yaw-bar" class="bg-green-400 h-2 rounded-full transition-all duration-300" style="width: 50%"></div>
+                                </div>
+                                <div class="text-xs text-gray-400 flex justify-between">
+                                    <span>Centered</span>
+                                    <span>Looking Away</span>
+                                </div>
+                            </div>
+
+                            <!-- Eye Gaze -->
+                            <div class="metric-card bg-white/10 rounded-xl p-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-gray-200 font-medium">
+                                        <i class="fas fa-eye mr-2"></i>Eye Gaze
+                                    </span>
+                                    <span id="gaze-deviation-value" class="text-2xl font-bold text-green-400">0.000</span>
+                                </div>
+                                <div class="w-full bg-gray-700 rounded-full h-2 mb-1">
+                                    <div id="gaze-deviation-bar" class="bg-green-400 h-2 rounded-full transition-all duration-300" style="width: 50%"></div>
+                                </div>
+                                <div class="text-xs text-gray-400 flex justify-between">
+                                    <span>Focused</span>
+                                    <span>Distracted</span>
+                                </div>
+                            </div>
+
+                            <!-- Device Detection -->
+                            <div class="metric-card bg-white/10 rounded-xl p-4">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-200 font-medium">
+                                        <i class="fas fa-mobile-alt mr-2"></i>Device Detection
+                                    </span>
+                                    <span id="device-status" class="text-2xl font-bold text-green-400">CLEAR</span>
+                                </div>
+                                <div class="mt-2 text-xs text-gray-400">
+                                    No unauthorized devices detected
+                                </div>
+                            </div>
+
+                            <!-- Focus Score -->
+                            <div class="metric-card bg-white/10 rounded-xl p-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-gray-200 font-medium">
+                                        <i class="fas fa-brain mr-2"></i>Focus Score
+                                    </span>
+                                    <span id="focus-score-value" class="text-2xl font-bold text-green-400">92%</span>
+                                </div>
+                                <div class="w-full bg-gray-700 rounded-full h-2 mb-1">
+                                    <div id="focus-score-bar" class="bg-green-400 h-2 rounded-full transition-all duration-300" style="width: 92%"></div>
+                                </div>
+                                <div class="text-xs text-gray-400 flex justify-between">
+                                    <span>Distracted</span>
+                                    <span>Focused</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Exam Information -->
+                    <div class="glass-card rounded-2xl p-6">
+                        <h2 class="text-xl font-semibold text-white mb-4">
+                            <i class="fas fa-info-circle mr-2"></i>Exam Information
+                        </h2>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between text-gray-200">
+                                <span>Exam:</span>
+                                <span class="font-semibold" id="exam-title">Computer Science Final</span>
+                            </div>
+                            <div class="flex justify-between text-gray-200">
+                                <span>Duration:</span>
+                                <span class="font-semibold" id="exam-duration">02:00:00</span>
+                            </div>
+                            <div class="flex justify-between text-gray-200">
+                                <span>Questions:</span>
+                                <span class="font-semibold" id="exam-questions">50</span>
+                            </div>
+                            <div class="flex justify-between text-gray-200">
+                                <span>Status:</span>
+                                <span class="font-semibold text-green-400" id="exam-status">In Progress</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="glass-card rounded-2xl p-6">
+                        <h2 class="text-xl font-semibold text-white mb-4">
+                            <i class="fas fa-cogs mr-2"></i>Quick Actions
+                        </h2>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button class="bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-xl font-semibold transition-colors flex items-center justify-center">
+                                <i class="fas fa-flag mr-2"></i>Flag Issue
+                            </button>
+                            <button class="bg-purple-500 hover:bg-purple-600 text-white py-3 px-4 rounded-xl font-semibold transition-colors flex items-center justify-center">
+                                <i class="fas fa-pause mr-2"></i>Pause
+                            </button>
+                            <button class="bg-yellow-500 hover:bg-yellow-600 text-white py-3 px-4 rounded-xl font-semibold transition-colors flex items-center justify-center">
+                                <i class="fas fa-comment mr-2"></i>Help
+                            </button>
+                            <button class="bg-red-500 hover:bg-red-600 text-white py-3 px-4 rounded-xl font-semibold transition-colors flex items-center justify-center">
+                                <i class="fas fa-times mr-2"></i>End
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Canvas for Frame Processing -->
+    <canvas id="capture-canvas" class="capture-canvas"></canvas>
+
+    <script>
+        class ProctoringDashboard {
+            constructor() {
+                // Camera configuration
+                this.cameraStream = null;
+                this.cameraDevices = [];
+                this.currentCameraIndex = 0;
+                this.isCameraActive = false;
+                
+                // Performance monitoring
+                this.lastFrameTime = null;
+                this.frameCount = 0;
+                this.currentFPS = 0;
+                
+                // Detection state
+                this.faceDetected = false;
+                this.faceDetectionCount = 0;
+                this.distractionStartTime = null;
+                this.focusScore = 92;
+                this.detectionConfidence = 0;
+                
+                // Session management
+                this.sessionStart = Date.now();
+                this.activityLog = [];
+                this.alertHistory = [];
+                this.userData = null;
+
+                // Simulated user database
+                this.users = {
+                    'student1@university.edu': { 
+                        password: 'password123', 
+                        role: 'student', 
+                        name: 'John Smith',
+                        studentId: 'S123456',
+                        exams: ['Computer Science Final']
+                    },
+                    'demo@student.edu': { 
+                        password: 'demo123', 
+                        role: 'student', 
+                        name: 'Demo Student',
+                        studentId: 'S999999',
+                        exams: ['Demo Examination']
+                    }
+                };
+
+                // Exam database
+                this.exams = {
+                    'Computer Science Final': {
+                        duration: '02:00:00',
+                        questions: 50,
+                        subject: 'Computer Science',
+                        level: 'Advanced',
+                        allowedAids: 'None',
+                        maxScore: 100
+                    },
+                    'Demo Examination': {
+                        duration: '01:00:00',
+                        questions: 10,
+                        subject: 'Demo Subject',
+                        level: 'All Levels',
+                        allowedAids: 'None',
+                        maxScore: 100
+                    }
+                };
+
+                this.initializeEventListeners();
+                this.updateCurrentTime();
+                setInterval(() => this.updateCurrentTime(), 1000);
+            }
+
+            initializeEventListeners() {
+                // Login form
+                document.getElementById('login-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleLogin();
+                });
+
+                // Logout button
+                document.getElementById('logout-btn').addEventListener('click', () => {
+                    this.handleLogout();
+                });
+
+                // Demo account buttons
+                document.querySelectorAll('.demo-account-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const email = e.target.dataset.email;
+                        const password = e.target.dataset.password;
+                        document.getElementById('email').value = email;
+                        document.getElementById('password').value = password;
+                    });
+                });
+
+                // Camera controls
+                document.getElementById('toggle-camera-btn').addEventListener('click', () => {
+                    this.switchCamera();
+                });
+
+                document.getElementById('capture-frame-btn').addEventListener('click', () => {
+                    this.captureFrame();
+                });
+
+                // Check for remembered email
+                const rememberedEmail = localStorage.getItem('rememberedEmail');
+                if (rememberedEmail) {
+                    document.getElementById('email').value = rememberedEmail;
+                    document.getElementById('remember-me').checked = true;
+                }
+            }
+
+            handleLogin() {
+                const email = document.getElementById('email').value.trim().toLowerCase();
+                const password = document.getElementById('password').value;
+                const rememberMe = document.getElementById('remember-me').checked;
+
+                // Show loading state
+                const submitBtn = document.querySelector('#login-form button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Authenticating...';
+                submitBtn.disabled = true;
+
+                // Simulate API call delay
+                setTimeout(() => {
+                    const authResult = this.authenticateUser(email, password);
+                    
+                    if (authResult.success) {
+                        this.userData = authResult.userData;
+                        
+                        // Store login data if "Remember me" is checked
+                        if (rememberMe) {
+                            localStorage.setItem('rememberedEmail', email);
+                        } else {
+                            localStorage.removeItem('rememberedEmail');
+                        }
+                        
+                        this.showDashboard();
+                        this.showSuccessMessage(authResult.message);
+                    } else {
+                        this.showErrorMessage(authResult.message);
+                    }
+                    
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }, 1500);
+            }
+
+            authenticateUser(email, password) {
+                // Check if user exists
+                if (!this.users[email]) {
+                    return {
+                        success: false,
+                        message: 'Invalid email address. Please check your credentials.'
+                    };
+                }
+
+                // Check password
+                if (this.users[email].password !== password) {
+                    return {
+                        success: false,
+                        message: 'Incorrect password. Please try again.'
+                    };
+                }
+
+                const user = this.users[email];
+                
+                // Prepare user data
+                let userData = {
+                    email: email,
+                    name: user.name,
+                    role: user.role,
+                    loginTime: new Date().toISOString(),
+                    sessionId: this.generateSessionId()
+                };
+
+                // Add role-specific data
+                if (user.role === 'student') {
+                    userData.studentId = user.studentId;
+                    userData.exams = user.exams;
+                    userData.currentExam = user.exams[0];
+                    userData.examData = this.exams[user.exams[0]];
+                }
+
+                return {
+                    success: true,
+                    userData: userData,
+                    message: `Welcome back, ${user.name}!`
+                };
+            }
+
+            generateSessionId() {
+                return 'session_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+            }
+
+            handleLogout() {
+                if (confirm('Are you sure you want to logout? This will end your exam session.')) {
+                    this.addActivityLog('User logged out', 'system', 'blue');
+                    this.hideDashboard();
+                    this.stopCamera();
+                    document.getElementById('login-form').reset();
+                    this.showSuccessMessage('You have been logged out successfully.');
+                }
+            }
+
+            showDashboard() {
+                document.getElementById('login-page').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                
+                // Update user info
+                this.updateUserInterface();
+
+                this.startSessionTimer();
+                this.initializeCamera();
+                
+                // Log login event
+                this.addActivityLog(`User ${this.userData.name} logged in`, 'system', 'green');
+                
+                if (this.userData.role === 'student') {
+                    this.addActivityLog(`Exam "${this.userData.currentExam}" started`, 'system', 'blue');
+                }
+            }
+
+            hideDashboard() {
+                document.getElementById('login-page').classList.remove('hidden');
+                document.getElementById('dashboard').classList.add('hidden');
+            }
+
+            updateUserInterface() {
+                if (!this.userData) return;
+
+                const userNameElement = document.getElementById('user-name');
+                const examNameElement = document.getElementById('exam-name');
+                const examTitleElement = document.getElementById('exam-title');
+                const examDurationElement = document.getElementById('exam-duration');
+                const examQuestionsElement = document.getElementById('exam-questions');
+                const examStatusElement = document.getElementById('exam-status');
+
+                // Update basic user info
+                userNameElement.textContent = this.userData.name;
+
+                if (this.userData.role === 'student') {
+                    examNameElement.textContent = this.userData.currentExam;
+                    examTitleElement.textContent = this.userData.currentExam;
+                    examDurationElement.textContent = this.userData.examData.duration;
+                    examQuestionsElement.textContent = this.userData.examData.questions;
+                    examStatusElement.textContent = 'In Progress';
+                    examStatusElement.className = 'font-semibold text-green-400';
+                }
+            }
+
+            // Camera Management
+            async initializeCamera() {
+                try {
+                    this.addActivityLog('Initializing camera...', 'system', 'blue');
+                    
+                    // Get camera devices
+                    await this.getCameraDevices();
+                    
+                    // Start with the first camera
+                    await this.startCamera(0);
+                    
+                } catch (error) {
+                    console.error('Error initializing camera:', error);
+                    this.addActivityLog('Failed to initialize camera: ' + error.message, 'error', 'red');
+                    this.showCameraError();
+                }
+            }
+
+            async getCameraDevices() {
+                try {
+                    // Get all video input devices
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    this.cameraDevices = devices.filter(device => device.kind === 'videoinput');
+                    
+                    if (this.cameraDevices.length === 0) {
+                        throw new Error('No camera devices found');
+                    }
+                    
+                    this.addActivityLog(`Found ${this.cameraDevices.length} camera(s)`, 'system', 'green');
+                    
+                } catch (error) {
+                    console.error('Error getting camera devices:', error);
+                    throw new Error('Cannot access camera devices');
+                }
+            }
+
+            async startCamera(deviceIndex) {
+                try {
+                    // Stop current camera if active
+                    if (this.cameraStream) {
+                        this.stopCamera();
+                    }
+
+                    const constraints = {
+                        video: {
+                            deviceId: this.cameraDevices[deviceIndex]?.deviceId ? { exact: this.cameraDevices[deviceIndex].deviceId } : undefined,
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 },
+                            frameRate: { ideal: 30 }
+                        }
+                    };
+
+                    // Request camera access
+                    this.cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+                    
+                    // Display camera feed
+                    const videoElement = document.getElementById('live-camera-feed');
+                    videoElement.srcObject = this.cameraStream;
+                    videoElement.classList.remove('hidden');
+                    
+                    // Hide placeholder
+                    document.getElementById('video-placeholder').classList.add('hidden');
+                    
+                    // Update status
+                    this.isCameraActive = true;
+                    this.updateCameraStatus('active');
+                    this.addActivityLog('Camera feed started successfully', 'system', 'green');
+                    
+                    // Start frame processing
+                    this.startFrameProcessing();
+                    
+                    // Update resolution display
+                    const track = this.cameraStream.getVideoTracks()[0];
+                    const settings = track.getSettings();
+                    document.getElementById('resolution-display').textContent = 
+                        `${settings.width || '--'}x${settings.height || '--'}`;
+                        
+                } catch (error) {
+                    console.error('Error starting camera:', error);
+                    this.addActivityLog('Camera access denied or failed: ' + error.message, 'error', 'red');
+                    this.showCameraError();
+                }
+            }
+
+            stopCamera() {
+                if (this.cameraStream) {
+                    this.cameraStream.getTracks().forEach(track => track.stop());
+                    this.cameraStream = null;
+                }
+                this.isCameraActive = false;
+                this.updateCameraStatus('inactive');
+            }
+
+            async switchCamera() {
+                if (this.cameraDevices.length <= 1) {
+                    this.addActivityLog('Only one camera available', 'system', 'yellow');
+                    return;
+                }
+
+                this.currentCameraIndex = (this.currentCameraIndex + 1) % this.cameraDevices.length;
+                this.addActivityLog(`Switching to camera ${this.currentCameraIndex + 1}`, 'system', 'blue');
+                
+                await this.startCamera(this.currentCameraIndex);
+            }
+
+            updateCameraStatus(status) {
+                const statusElement = document.getElementById('camera-status');
+                const statusText = document.getElementById('camera-status-text');
+                const feedType = document.getElementById('feed-type');
+                
+                if (status === 'active') {
+                    statusElement.textContent = '🟢 ACTIVE';
+                    statusElement.className = 'font-semibold text-green-400';
+                    statusText.textContent = 'Camera Active';
+                    feedType.textContent = 'Live Camera';
+                    feedType.className = 'font-semibold text-green-400';
+                } else {
+                    statusElement.textContent = '🔴 INACTIVE';
+                    statusElement.className = 'font-semibold text-red-400';
+                    statusText.textContent = 'Camera Inactive';
+                    feedType.textContent = 'No Feed';
+                    feedType.className = 'font-semibold text-red-400';
+                }
+            }
+
+            showCameraError() {
+                const videoPlaceholder = document.getElementById('video-placeholder');
+                videoPlaceholder.innerHTML = `
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3 text-red-400"></i>
+                        <p class="text-red-400 font-semibold">Camera Error</p>
+                        <p class="text-gray-400 text-sm mt-2">Please check camera permissions and try again</p>
+                        <button onclick="window.proctoringDashboard.initializeCamera()" class="bg-blue-500 text-white px-4 py-2 rounded mt-3">
+                            Retry Camera
+                        </button>
+                    </div>
+                `;
+                videoPlaceholder.classList.remove('hidden');
+            }
+
+            startFrameProcessing() {
+                // Process frames for detection and analytics
+                this.processFrame();
+            }
+
+            processFrame() {
+                if (!this.isCameraActive) return;
+
+                const video = document.getElementById('live-camera-feed');
+                const canvas = document.getElementById('capture-canvas');
+                const ctx = canvas.getContext('2d');
+
+                // Set canvas dimensions to match video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                // Draw current video frame to canvas
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // Process the frame for detection
+                this.analyzeFrame(canvas);
+
+                // Calculate FPS
+                this.updateFPS();
+
+                // Continue processing
+                requestAnimationFrame(() => this.processFrame());
+            }
+
+            analyzeFrame(canvas) {
+                // Simulate AI analysis - in a real system, this would use actual ML models
+                this.simulateFaceDetection();
+                this.simulateGazeTracking();
+                this.updateDetectionOverlay();
+                
+                // Update metrics with simulated data
+                this.updateMetricsWithSimulatedData();
+            }
+
+            simulateFaceDetection() {
+                // Simulate face detection with some randomness
+                const hasFace = Math.random() > 0.1; // 90% chance of face detection
+                
+                if (hasFace) {
+                    this.faceDetectionCount++;
+                    this.faceDetected = true;
+                    
+                    if (this.faceDetectionCount > 5) {
+                        document.getElementById('face-detection-status').textContent = '🟢 DETECTED';
+                        document.getElementById('face-detection-status').className = 'font-semibold text-green-400';
+                        document.getElementById('detection-status').textContent = 'Face Detected';
+                    }
+                } else {
+                    this.faceDetected = false;
+                    this.faceDetectionCount = Math.max(0, this.faceDetectionCount - 1);
+                    
+                    if (this.faceDetectionCount === 0) {
+                        document.getElementById('face-detection-status').textContent = '🔴 NOT DETECTED';
+                        document.getElementById('face-detection-status').className = 'font-semibold text-red-400';
+                        document.getElementById('detection-status').textContent = 'No Face';
+                    }
+                }
+            }
+
+            simulateGazeTracking() {
+                // Simulate gaze tracking - this would be real in production
+                // For demo purposes, we'll generate random but somewhat consistent data
+            }
+
+            updateDetectionOverlay() {
+                const overlay = document.getElementById('detection-overlay');
+                overlay.innerHTML = '';
+                
+                if (this.faceDetected) {
+                    // Create face bounding box
+                    const faceBox = document.createElement('div');
+                    faceBox.className = 'face-box';
+                    
+                    // Simulated face position (centered with slight movement)
+                    const width = 150 + Math.random() * 50;
+                    const height = 200 + Math.random() * 50;
+                    const left = 320 - width/2 + (Math.random() * 40 - 20);
+                    const top = 240 - height/2 + (Math.random() * 40 - 20);
+                    
+                    faceBox.style.width = `${width}px`;
+                    faceBox.style.height = `${height}px`;
+                    faceBox.style.left = `${left}px`;
+                    faceBox.style.top = `${top}px`;
+                    
+                    overlay.appendChild(faceBox);
+                    
+                    // Create eye dots
+                    const leftEye = document.createElement('div');
+                    leftEye.className = 'eye-dot';
+                    leftEye.style.left = `${left + width * 0.3}px`;
+                    leftEye.style.top = `${top + height * 0.35}px`;
+                    
+                    const rightEye = document.createElement('div');
+                    rightEye.className = 'eye-dot';
+                    rightEye.style.left = `${left + width * 0.7}px`;
+                    rightEye.style.top = `${top + height * 0.35}px`;
+                    
+                    overlay.appendChild(leftEye);
+                    overlay.appendChild(rightEye);
+                    
+                    // Create gaze direction line
+                    const gazeAngle = (Math.random() - 0.5) * 60; // -30 to 30 degrees
+                    const gazeLine = document.createElement('div');
+                    gazeLine.className = 'gaze-line';
+                    gazeLine.style.left = `${left + width * 0.5}px`;
+                    gazeLine.style.top = `${top + height * 0.4}px`;
+                    gazeLine.style.width = '50px';
+                    gazeLine.style.transform = `rotate(${gazeAngle}deg)`;
+                    
+                    overlay.appendChild(gazeLine);
+                } else {
+                    // No face detected warning
+                    const warning = document.createElement('div');
+                    warning.className = 'absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center';
+                    warning.innerHTML = `
+                        <div class="bg-red-500 text-white p-4 rounded-lg">
+                            <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                            <p>Face not detected</p>
+                            <p class="text-sm mt-1">Please position yourself in front of the camera</p>
+                        </div>
+                    `;
+                    overlay.appendChild(warning);
+                }
+            }
+
+            updateMetricsWithSimulatedData() {
+                // Generate realistic but varying metrics
+                const headYaw = Math.abs((Math.random() - 0.5) * 25); // 0-25 degrees
+                const gazeDeviation = Math.random() * 0.8; // 0-0.8
+                const deviceDetected = Math.random() < 0.05; // 5% chance
+                
+                // Update metrics display
+                this.updateMetricElement('head-yaw-value', `${headYaw.toFixed(1)}°`, headYaw, 30);
+                const headPercentage = Math.min((headYaw / 30) * 100, 100);
+                this.updateProgressBar('head-yaw-bar', headPercentage, headYaw, 10, 20);
+
+                this.updateMetricElement('gaze-deviation-value', gazeDeviation.toFixed(3), gazeDeviation, 1.0);
+                const gazePercentage = Math.min((gazeDeviation / 1.0) * 100, 100);
+                this.updateProgressBar('gaze-deviation-bar', gazePercentage, gazeDeviation, 0.3, 0.6);
+
+                this.updateDeviceStatus(deviceDetected);
+                this.updateFocusScore(headYaw, gazeDeviation, deviceDetected);
+                this.updateAlerts(headYaw, gazeDeviation, deviceDetected);
+            }
+
+            updateMetricElement(elementId, value, currentValue, maxValue) {
+                const element = document.getElementById(elementId);
+                if (!element) return;
+
+                element.textContent = value;
+
+                // Update color based on value severity
+                const severity = currentValue / maxValue;
+                if (severity > 0.66) {
+                    element.className = 'text-2xl font-bold text-red-400';
+                } else if (severity > 0.33) {
+                    element.className = 'text-2xl font-bold text-yellow-400';
+                } else {
+                    element.className = 'text-2xl font-bold text-green-400';
+                }
+            }
+
+            updateProgressBar(elementId, percentage, currentValue, warningThreshold, dangerThreshold) {
+                const element = document.getElementById(elementId);
+                if (!element) return;
+
+                element.style.width = `${percentage}%`;
+
+                // Update color based on thresholds
+                if (currentValue > dangerThreshold) {
+                    element.className = 'h-2 rounded-full transition-all duration-300 bg-red-400';
+                } else if (currentValue > warningThreshold) {
+                    element.className = 'h-2 rounded-full transition-all duration-300 bg-yellow-400';
+                } else {
+                    element.className = 'h-2 rounded-full transition-all duration-300 bg-green-400';
+                }
+            }
+
+            updateDeviceStatus(deviceDetected) {
+                const element = document.getElementById('device-status');
+                if (!element) return;
+
+                if (deviceDetected) {
+                    element.textContent = 'DETECTED';
+                    element.className = 'text-2xl font-bold text-red-400';
+                    if (!this.alertHistory.includes('device')) {
+                        this.addActivityLog('Unauthorized device detected!', 'alert', 'red');
+                        this.alertHistory.push('device');
+                    }
+                } else {
+                    element.textContent = 'CLEAR';
+                    element.className = 'text-2xl font-bold text-green-400';
+                    if (this.alertHistory.includes('device')) {
+                        this.alertHistory = this.alertHistory.filter(a => a !== 'device');
+                    }
+                }
+            }
+
+            updateFocusScore(headYaw, gazeDeviation, deviceDetected) {
+                // Calculate focus score based on multiple factors
+                let score = 100;
+                
+                // Deduct points for head movement
+                if (headYaw > 20) score -= 30;
+                else if (headYaw > 10) score -= 15;
+                else if (headYaw > 5) score -= 5;
+                
+                // Deduct points for gaze deviation
+                if (gazeDeviation > 0.8) score -= 30;
+                else if (gazeDeviation > 0.5) score -= 15;
+                else if (gazeDeviation > 0.3) score -= 5;
+                
+                // Deduct points for device detection
+                if (deviceDetected) score -= 40;
+                
+                // Ensure score is within bounds
+                score = Math.max(0, Math.min(100, score));
+                
+                // Update focus score display
+                const focusScoreElement = document.getElementById('focus-score-value');
+                const focusScoreBar = document.getElementById('focus-score-bar');
+                const focusLevelElement = document.getElementById('focus-level');
+                
+                focusScoreElement.textContent = `${Math.round(score)}%`;
+                focusScoreBar.style.width = `${score}%`;
+                
+                // Update color based on score
+                if (score >= 80) {
+                    focusScoreElement.className = 'text-2xl font-bold text-green-400';
+                    focusScoreBar.className = 'h-2 rounded-full transition-all duration-300 bg-green-400';
+                    focusLevelElement.textContent = 'Excellent';
+                    focusLevelElement.className = 'font-semibold text-green-400';
+                } else if (score >= 60) {
+                    focusScoreElement.className = 'text-2xl font-bold text-yellow-400';
+                    focusScoreBar.className = 'h-2 rounded-full transition-all duration-300 bg-yellow-400';
+                    focusLevelElement.textContent = 'Good';
+                    focusLevelElement.className = 'font-semibold text-yellow-400';
+                } else if (score >= 40) {
+                    focusScoreElement.className = 'text-2xl font-bold text-orange-400';
+                    focusScoreBar.className = 'h-2 rounded-full transition-all duration-300 bg-orange-400';
+                    focusLevelElement.textContent = 'Fair';
+                    focusLevelElement.className = 'font-semibold text-orange-400';
+                } else {
+                    focusScoreElement.className = 'text-2xl font-bold text-red-400';
+                    focusScoreBar.className = 'h-2 rounded-full transition-all duration-300 bg-red-400';
+                    focusLevelElement.textContent = 'Poor';
+                    focusLevelElement.className = 'font-semibold text-red-400';
+                }
+                
+                // Update distraction indicator
+                this.updateDistractionIndicator(score);
+            }
+
+            updateDistractionIndicator(score) {
+                const distractionIndicator = document.getElementById('distraction-indicator');
+                
+                if (score < 50) {
+                    // User is distracted
+                    distractionIndicator.classList.remove('hidden');
+                    
+                    // Start tracking distraction time if not already
+                    if (!this.distractionStartTime) {
+                        this.distractionStartTime = Date.now();
+                        this.addActivityLog('User appears distracted', 'alert', 'red');
+                    } else {
+                        // Check if distraction has been ongoing for more than 10 seconds
+                        const distractionDuration = (Date.now() - this.distractionStartTime) / 1000;
+                        if (distractionDuration > 10 && !this.alertHistory.includes('prolonged_distraction')) {
+                            this.addActivityLog('Prolonged distraction detected', 'alert', 'red');
+                            this.alertHistory.push('prolonged_distraction');
+                        }
+                    }
+                } else {
+                    // User is focused
+                    distractionIndicator.classList.add('hidden');
+                    
+                    // Reset distraction tracking
+                    if (this.distractionStartTime) {
+                        const distractionDuration = (Date.now() - this.distractionStartTime) / 1000;
+                        if (distractionDuration > 5) {
+                            this.addActivityLog('User is now focused', 'system', 'green');
+                        }
+                        this.distractionStartTime = null;
+                    }
+                    
+                    // Remove prolonged distraction alert if it exists
+                    if (this.alertHistory.includes('prolonged_distraction')) {
+                        this.alertHistory = this.alertHistory.filter(a => a !== 'prolonged_distraction');
+                    }
+                }
+            }
+
+            updateAlerts(headYaw, gazeDeviation, deviceDetected) {
+                const alertPanel = document.getElementById('alert-panel');
+                const alertStatus = document.getElementById('alert-status');
+                const alertMessage = document.getElementById('alert-message');
+                const alertIcon = alertPanel?.querySelector('i');
+
+                if (!alertPanel || !alertStatus || !alertMessage) return;
+
+                const headAlert = headYaw > 20;
+                const gazeAlert = gazeDeviation > 0.6;
+                const noFaceAlert = !this.faceDetected;
+
+                const hasAlert = headAlert || gazeAlert || deviceDetected || noFaceAlert;
+
+                if (hasAlert) {
+                    // Alert state
+                    alertPanel.className = 'glass-card rounded-2xl p-6 bg-red-500/20 border-red-400/30 alert-pulse';
+                    alertStatus.textContent = 'ALERT!';
+                    alertStatus.className = 'text-2xl font-bold text-red-400 mb-2';
+                    alertIcon.className = 'fas fa-exclamation-triangle text-5xl text-red-400 mb-4';
+
+                    // Determine alert type
+                    if (deviceDetected) {
+                        alertMessage.textContent = 'Unauthorized device detected!';
+                    } else if (noFaceAlert) {
+                        alertMessage.textContent = 'Face not detected! Please position yourself in front of the camera.';
+                    } else if (headAlert && gazeAlert) {
+                        alertMessage.textContent = 'Multiple suspicious behaviors detected';
+                    } else if (headAlert) {
+                        alertMessage.textContent = 'Head movement outside allowed range';
+                    } else if (gazeAlert) {
+                        alertMessage.textContent = 'Eye gaze deviation detected';
+                    }
+                } else {
+                    // Clear state
+                    alertPanel.className = 'glass-card rounded-2xl p-6 bg-green-500/20 border-green-400/30';
+                    alertStatus.textContent = 'ALL CLEAR';
+                    alertStatus.className = 'text-2xl font-bold text-green-400 mb-2';
+                    alertIcon.className = 'fas fa-check-circle text-5xl text-green-400 mb-4';
+                    alertMessage.textContent = 'No suspicious activity detected';
+                }
+            }
+
+            updateFPS() {
+                const now = performance.now();
+                
+                if (!this.lastFrameTime) {
+                    this.lastFrameTime = now;
+                    this.frameCount = 0;
+                    return;
+                }
+                
+                this.frameCount++;
+                
+                if (now - this.lastFrameTime >= 1000) {
+                    this.currentFPS = Math.round((this.frameCount * 1000) / (now - this.lastFrameTime));
+                    this.lastFrameTime = now;
+                    this.frameCount = 0;
+                    
+                    // Update FPS display
+                    document.getElementById('fps-display').textContent = this.currentFPS;
+                    document.getElementById('fps-display-main').textContent = `${this.currentFPS} FPS`;
+                }
+            }
+
+            captureFrame() {
+                if (!this.isCameraActive) return;
+
+                const canvas = document.getElementById('capture-canvas');
+                const link = document.createElement('a');
+                
+                // Convert canvas to data URL
+                link.href = canvas.toDataURL('image/jpeg', 0.8);
+                link.download = `proctoring-capture-${new Date().toISOString().replace(/[:.]/g, '-')}.jpg`;
+                
+                // Trigger download
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                this.addActivityLog('Frame captured for review', 'system', 'blue');
+            }
+
+            // Activity Log Management
+            addActivityLog(message, type = 'system', color = 'blue') {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = {
+                    timestamp: timestamp,
+                    message: message,
+                    type: type,
+                    color: color
+                };
+
+                this.activityLog.unshift(logEntry);
+                
+                // Keep only last 20 entries
+                if (this.activityLog.length > 20) {
+                    this.activityLog = this.activityLog.slice(0, 20);
+                }
+
+                this.updateActivityLogUI();
+            }
+
+            updateActivityLogUI() {
+                const logContainer = document.getElementById('activity-log');
+                if (!logContainer) return;
+
+                logContainer.innerHTML = '';
+
+                this.activityLog.forEach(entry => {
+                    const logElement = document.createElement('div');
+                    const colorClass = this.getColorClass(entry.color);
+                    logElement.className = `border-l-4 pl-3 py-1 mb-2 ${colorClass.border} ${colorClass.text}`;
+                    logElement.innerHTML = `
+                        <i class="fas fa-${entry.type === 'alert' ? 'exclamation-triangle' : 'info-circle'} mr-2"></i>
+                        <span class="font-mono">[${entry.timestamp}]</span> ${entry.message}
+                    `;
+                    logContainer.appendChild(logElement);
+                });
+            }
+
+            getColorClass(color) {
+                const colors = {
+                    green: { border: 'border-green-400', text: 'text-green-400' },
+                    red: { border: 'border-red-400', text: 'text-red-400' },
+                    yellow: { border: 'border-yellow-400', text: 'text-yellow-400' },
+                    blue: { border: 'border-blue-400', text: 'text-blue-400' }
+                };
+                return colors[color] || colors.blue;
+            }
+
+            // Session Management
+            startSessionTimer() {
+                this.sessionStart = Date.now();
+                setInterval(() => {
+                    const elapsed = Date.now() - this.sessionStart;
+                    const hours = Math.floor(elapsed / 3600000);
+                    const minutes = Math.floor((elapsed % 3600000) / 60000);
+                    const seconds = Math.floor((elapsed % 60000) / 1000);
+                    
+                    document.getElementById('session-timer').textContent = 
+                        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }, 1000);
+            }
+
+            updateCurrentTime() {
+                const now = new Date();
+                document.getElementById('current-time').textContent = now.toLocaleTimeString();
+            }
+
+            // UI Helpers
+            showSuccessMessage(message) {
+                this.showMessage(message, 'green');
+            }
+
+            showErrorMessage(message) {
+                this.showMessage(message, 'red');
+            }
+
+            showMessage(message, color) {
+                // Remove existing message
+                const existingMessage = document.querySelector('.login-message');
+                if (existingMessage) {
+                    existingMessage.remove();
+                }
+
+                // Create new message
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `login-message mt-4 p-3 rounded-lg text-white text-center ${
+                    color === 'green' ? 'bg-green-500' : 'bg-red-500'
+                }`;
+                messageDiv.innerHTML = `
+                    <i class="fas fa-${color === 'green' ? 'check' : 'exclamation'}-circle mr-2"></i>
+                    ${message}
+                `;
+
+                // Add to login form
+                const loginForm = document.getElementById('login-form');
+                if (loginForm && loginForm.parentNode) {
+                    loginForm.parentNode.insertBefore(messageDiv, loginForm.nextSibling);
+                }
+
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    if (messageDiv.parentNode) {
+                        messageDiv.remove();
+                    }
+                }, 5000);
+            }
+        }
+
+        // Initialize the dashboard when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.proctoringDashboard = new ProctoringDashboard();
+        });
+    </script>
+</body>
+</html>
